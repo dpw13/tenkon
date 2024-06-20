@@ -1,14 +1,16 @@
 /* Linker script for bare-metal ROM generation */
 
+_rom_sz = 0x100000;
+_sram_sz = 0x080000;
+_stack_sz = 1K;
+
 MEMORY {
-    rom     (rx!w) : ORIGIN = 0x000000, LENGTH = 0x080000
-    sram    (rwx)  : ORIGIN = 0x100000, LENGTH = 0x002000
+    rom     (rx!w) : ORIGIN = 0x000000, LENGTH = _rom_sz
+    sram    (rwx)  : ORIGIN = 0x100000, LENGTH = _sram_sz
 }
 
-_stack_sz = 1K;
-_heap_sz = 1K;
-
 /* Section Definitions */
+/* Credit to https://github.com/tomstorey/m68k_bare_metal/blob/master/standalone/platform.ld */ 
 SECTIONS {
     .evt : {
         /* Reset vector */
@@ -73,12 +75,8 @@ SECTIONS {
         LONG(DEFINED(MMUConfigurationError) ? ABSOLUTE(MMUConfigurationError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(MMUIllegalOperation) ? ABSOLUTE(MMUIllegalOperation) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(MMUAccessLevelViolation) ? ABSOLUTE(MMUAccessLevelViolation) : ABSOLUTE(__DefaultInterrupt));
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
 
+        . = 0x100;
 /*
  *
  * User Interrupt Vectors
@@ -98,6 +96,7 @@ SECTIONS {
  *   . = 0x140;
  *   LONG(ABSOLUTE(NameOfHandlerFunction));
  */
+        . = 0x400;
     } > rom
 
     .text : {
@@ -131,12 +130,12 @@ SECTIONS {
 
     .heap : {
         _heap_start = .;
-        . += _heap_sz;
+        . += _sram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data);
         _heap_end = .;
     } > sram
 
     .stack : {
-        _stack_start = .;
+        _stack_start = 0x180000;
         . += _stack_sz;
         _stack_end = .;
     } > sram
