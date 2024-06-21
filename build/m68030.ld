@@ -2,7 +2,7 @@
 
 _rom_sz = 0x100000;
 _sram_sz = 0x080000;
-_stack_sz = 1K;
+_stack_sz = 4K;
 
 MEMORY {
     rom     (rx!w) : ORIGIN = 0x000000, LENGTH = _rom_sz
@@ -101,6 +101,7 @@ SECTIONS {
 
     .text : {
         _text_start = .;
+        KEEP(*(.init))
         *(.text .text.*)
         . = ALIGN(0x10);
         _text_end = .;

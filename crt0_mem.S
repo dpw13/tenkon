@@ -12,7 +12,7 @@
         .extern _data_end
         .extern main
 
-        .section .text
+        .section .init
         .align 2
 
         .type _start, @function
