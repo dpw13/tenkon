@@ -13,6 +13,25 @@ LD=$(PREFIX)-gcc
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
+NEWLIB_OPTS= \
+	--host=m68k-linux-gnu \
+	--enable-newlib-reent-small \
+	--disable-newlib-fvwrite-in-streamio \
+	--disable-newlib-fseek-optimization \
+	--disable-newlib-wide-orient \
+	--enable-newlib-nano-malloc \
+	--disable-newlib-unbuf-stream-opt \
+	--enable-lite-exit \
+	--enable-newlib-global-atexit \
+	--enable-newlib-nano-formatted-io \
+	--disable-newlib-io-float \
+	--disable-newlib-supplied-syscalls
+
+NEWLIB_CFLAGS= \
+	-g -Os -m$(MACHINE) -msoft-float \
+	-D__SINGLE_THREAD__ -DREENTRANT_SYSCALLS_PROVIDED -DNO_FORK \
+	-UMISSING_SYSCALL_NAMES
+
 all: hi.bin lo.bin
 
 # Putting crt0.o first makes the objdump disasm clearer
@@ -27,7 +46,7 @@ hi.bin lo.bin: swizzle.py rom.bin
 
 newlib/newlib/build/Makefile:
 	mkdir -p newlib/newlib/build
-	cd newlib/newlib/build && CFLAGS="-g -Os -m$(MACHINE) -msoft-float -D__SINGLE_THREAD__ -DREENTRANT_SYSCALLS_PROVIDED -DNO_FORK" ../configure --prefix=/usr/local/m68k-elf/     --host=m68k-linux-gnu --enable-newlib-reent-small --disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-wide-orient --enable-newlib-nano-malloc --disable-newlib-unbuf-stream-opt --enable-lite-exit --enable-newlib-global-atexit --enable-newlib-nano-formatted-io --disable-newlib-io-float --disable-newlib-supplied-syscalls
+	cd newlib/newlib/build && CFLAGS="$(NEWLIB_CFLAGS)" ../configure $(NEWLIB_OPTS)
 
 $(LIBC): newlib/newlib/build/Makefile
 	cd newlib/newlib/build && make -j8
