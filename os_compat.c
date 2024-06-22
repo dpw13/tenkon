@@ -106,7 +106,7 @@ _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 {
 	int read = 0;
 
-	for (; count > 0; --count) {
+	for (; len > 0; --len) {
 		readSerial((char *)ptr++);
 		read++;
 	}
@@ -121,8 +121,24 @@ _readlink_r(struct _reent *reent, const char *path, char *buf, size_t bufsize)
 }
 
 void *_sbrk_r (struct _reent *reent, ptrdiff_t incr) {
-	reent->_errno = ENOSYS;
-	return NULL;
+	extern int _heap_start;
+	extern int _heap_end;
+
+	static int *heap_end = NULL;
+	int *prev_heap_end;
+
+	if (heap_end == NULL) {
+		heap_end = &_heap_start;
+	}
+
+	prev_heap_end = heap_end;
+	heap_end += incr;
+
+	if(heap_end >= &_heap_end) {
+		reent->_errno = ENOMEM;
+		return (void *)-1;
+	}
+	return (void *) prev_heap_end;
 }
 
 int

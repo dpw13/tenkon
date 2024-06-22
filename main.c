@@ -9,7 +9,7 @@ void main(void) {
     initializeSerial();
 
     while (1) {
-        writeCharToSerial(0x5A);
+        writeSerial(0x5A);
     }
 }
 
