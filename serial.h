@@ -7,9 +7,13 @@
 #define SERIAL_H
 
 void initializeSerial();
+<<<<<<< Updated upstream
 void writeCharToSerial(const char c);
+=======
+void writeSerial(const char c);
+>>>>>>> Stashed changes
 void writeStringToSerial(const char *buffer, const int length);
-char readSerial();
+void readSerial(char *c);
 int readFromSerial(char *buffer, const int size);
 
 #endif //SERIAL_H

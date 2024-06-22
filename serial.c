@@ -23,23 +23,22 @@ void initializeSerial() {
     term_regs->A.CR = CR_CMD_NONE | CR_ENA_RX | CR_ENA_TX;
 }
 
-void writeCharToSerial(const char c) {
+void writeSerial(const char c) {
     // Busy wait until ready...probably not the best
-    while( !(term_regs->A.SR & 0x04) ) {
-    }
+    while( !(term_regs->A.SR & 0x04) ) {}
     term_regs->A.TxFIFO = c;
 }
 
 void writeStringToSerial(const char *buffer, const int length) {
     for(int i = 0; i < length; i++) {
-        writeCharToSerial(buffer[i]);
+        writeSerial(buffer[i]);
     }
 }
 
-char readSerial() {
-    while( !(term_regs->A.SR & 0x01) ) {
-    }
-    return term_regs->A.RxFIFO;
+void readSerial(char *c) {
+    while( !(term_regs->A.SR & 0x01) ) {}
+    *c = term_regs->A.RxFIFO;
+    return;
 }
 
 int readFromSerial(char *buffer, const int size) {
