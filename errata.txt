@@ -1,0 +1,16 @@
+CPU Board:
+TODO
+
+IO Board:
+Data buffer ~OE control should be AND of all CS signals on the board
+    U16.19 to U10.21, add PLD output
+XXX Data buffer DIR polarity is wrong - I was wrong about being wrong, R!W is correct!
+    U16.1 to U10.23
+
+OK READ r!w = 1
+cpu -> xcvr -> bus -> xcvr -> io
+       dir=1          dir=0
+
+OK WRITE r!w = 0
+cpu -> xcvr -> bus -> xcvr -> io
+       dir=0          dir=1

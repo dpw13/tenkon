@@ -1,0 +1,31 @@
+GAL22V10
+CPU_CS
+
+; Name     CPU_CS ;
+; PartNo   00 ;
+; Date     3/29/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   22v10 ;
+
+A21   A22   A23   A24   A25    A26     A27      A28   A29   A30         A31   GND
+A20   NC    NC    NC    /EXTCS /ROMCS  /SRAMCS  FC1   FC0   /BOOTSTRAP   /AS   VCC
+
+;CPUBOARD = /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; DATASPACE = /FC1 * FC0
+; PROGSPACE = FC1 * /FC0
+;VALIDSPACE = /FC1 * FC0 + FC1 * /FC0
+
+; All equations must be expanded in the form of sum-of-products (SOP)
+; ROM 0x00_0000 - 0x0F_FFFF
+ROMCS  = AS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+; SRAM 0x10_0000 - 0x1F_FFFF
+SRAMCS = AS *  A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+; Off-board 0xF000_0000 - 0xFFFF_FFFF, data only.
+EXTCS = /FC1 * FC0 * AS * A31 * A30 * A29 * A28
+
+

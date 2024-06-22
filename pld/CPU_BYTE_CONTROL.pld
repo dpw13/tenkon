@@ -1,0 +1,49 @@
+GAL22V10
+BYTE_CONTROL
+
+; Name     CPU_CONTROL_SIGNALS
+; PartNo   00
+; Date     3/29/2023
+; Revision 01
+; Designer Dylan Enloe
+; Company  Test
+; Assembly None
+; Location
+; Device   p22v10
+
+NC           RW           /AS           /DS           A0            A1            SIZ0          SIZ1          /EXTCS        /BG           /BUSBERR     GND
+WATCHDOGBERR BUSDIR       /NOTAS        /READ         /UUCS         /UMCS         /LMCS         /LLCS         /BUSOE        /NOTBG        /BERR        VCC
+
+NOTAS = /AS
+NOTBG = /BG
+
+; Bus writes occur during the data phase of writes to upper addresses, assuming
+; no bus grant is active.
+; Bus transceivers should be enabled when we are in the data phase of an external access.
+BUSOE = /BG * EXTCS * DS
+; Bus direction is 0 when the CPU is driving the bus, 1 when the bus is driving data to the CPU
+BUSDIR = /BG * /RW
+
+READ = RW
+
+BERR = BUSBERR + WATCHDOGBERR
+
+UUCS = RW + /A0 * /A1
+
+UMCS = RW
+       + A0 * /A1
+       + /A1 * /SIZ0
+       + /A1 * SIZ1
+
+LMCS = RW
+     + /A0 * A1
+     + /A1 * /SIZ0 * /SIZ1
+     + /A1 * SIZ0 * SIZ1
+     + /A1 * A0 * /SIZ0
+
+LLCS = RW
+     + A0 * A1
+     + A0 * SIZ0 * SIZ1
+     + /SIZ0 * /SIZ1
+     + A1 * SIZ1
+
