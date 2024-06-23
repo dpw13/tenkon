@@ -25,9 +25,9 @@ NEWLIB_OPTS= \
 	--disable-newlib-unbuf-stream-opt \
 	--enable-lite-exit \
 	--enable-newlib-global-atexit \
-	--enable-newlib-nano-formatted-io \
 	--disable-newlib-io-float \
-	--disable-newlib-supplied-syscalls
+	--disable-newlib-supplied-syscalls \
+	--enable-newlib-io-c99-formats
 
 NEWLIB_CFLAGS= \
 	-g -Os -m$(MACHINE) -msoft-float \

@@ -26,13 +26,13 @@ void loadData(int addr) {
 }
 
 void showData(int addr, const int size) {
-    printf("        | 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15\n");
+    printf("         | 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15\n");
     const int target = addr + size;
     addr = (addr / 16) * 16;
     while(addr < target) {
         printf("%08x | ", addr);
         for(int j = 0; j < 16; j++) {
-            printf("%02x ", memRead(addr));
+            printf("%02hhx ", memRead(addr));
             addr++;
         }
         printf("\n");

@@ -105,16 +105,19 @@ _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 	for (; len > 0; --len) {
 		readSerial(buf);
 		read++;
-		//writeStringToSerial("! read 0x", 10);
-		//printU8(*buf);
-		//writeSerial('\n');
-
 		/* echo */
 		writeSerial(*buf);
-		/* exit on linebreak */
-		if (*buf == '\n' || *buf == '\r')
+		/* Exit on linebreak. Recommended terminal settings are that
+		 * <enter> sends CRLF and to add an implicit CR to all LF */
+		if (*buf == '\n') {
 			break;
-		buf++;
+		}
+		if (*buf == '\b' || *buf == 127) {
+			/* model backspace */
+			*--buf = 0;
+		} else {
+			buf++;
+		}
 	}
 	//writeStringToSerial("! read -> 0x", 13);
 	//printU32(len);
@@ -136,9 +139,9 @@ void *_sbrk_r (struct _reent *reent, ptrdiff_t incr) {
 	static int *heap_end = NULL;
 	int *prev_heap_end;
 
-	writeStringToSerial("\n! sbrk 0x", 10);
-	printU32(incr);
-	writeSerial('\n');
+	//writeStringToSerial("\n! sbrk 0x", 10);
+	//printU32(incr);
+	//writeSerial('\n');
 
 	if (heap_end == NULL) {
 		heap_end = &_heap_start;
