@@ -12,8 +12,7 @@
         .globl _start
 
         /* Jump to main() */
-_start: call    initializeSerial
-        jmp     main
+_start: jmp     main
 
         /* In a bare metal environment, main() should not return as there is
          * nowhere to resume execution from. Behaviour is undefined if this

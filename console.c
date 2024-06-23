@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "serial.h"
 
 void memWrite(const char b, const int addr) {
     *(char *)addr = b;
@@ -31,7 +32,7 @@ void showData(int addr, const int size) {
     while(addr < target) {
         printf("%08x | ", addr);
         for(int j = 0; j < 16; j++) {
-            printf("%02hhx ", memRead(addr));
+            printf("%02x ", memRead(addr));
             addr++;
         }
         printf("\n");
@@ -46,6 +47,7 @@ void consoleLoop() {
 
     while(1) {  //run forever
         printf("%d >", line);
+        fflush(stdout);
         line++;
         scanf(" %c", &cmd);
         switch(cmd) {
@@ -74,6 +76,9 @@ void consoleLoop() {
 }
 
 int main(void) {
+    initializeSerial();
+    writeStringToSerial("Init\n", 5);
+
     printf("Welcome to the Tenkon Basic Console!\n");
     printf("Commands:\n");
     printf("L addr      - Loads bytes represented in Hex starting at addr.\n");

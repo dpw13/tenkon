@@ -30,8 +30,11 @@ void writeSerial(const char c) {
 }
 
 void writeStringToSerial(const char *buffer, const int length) {
+    const char *p = buffer;
     for(int i = 0; i < length; i++) {
-        writeSerial(buffer[i]);
+        // Manually inline for efficiency
+        while( !(term_regs->A.SR & 0x04) ) {}
+        term_regs->A.TxFIFO = *p++;
     }
 }
 

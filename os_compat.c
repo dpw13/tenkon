@@ -5,23 +5,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+
 #include "serial.h"
-
-/* Write is actually the only thing we provide. All other are stubs.. */
-
-void __attribute__((optimize("O0"))) _serial_outbyte(char c) {
-    // TODO
-}
+#include "print_utils.h"
 
 _ssize_t
 _write_r(struct _reent * reent, int fd, const void *buf, size_t nbytes)
 {
-	int i;
-	char* b = (char*) buf;
-
-	for (i = 0; i < nbytes; i++) {
-		writeSerial (*(b++));
-	}
+	writeStringToSerial((const char *)buf, nbytes);
 	return (nbytes);
 }
 
@@ -105,11 +96,29 @@ _ssize_t
 _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 {
 	int read = 0;
+	char *buf = (char *)ptr;
+
+	//writeStringToSerial("! read <- 0x", 13);
+	//printU32(len);
+	//writeSerial('\n');
 
 	for (; len > 0; --len) {
-		readSerial((char *)ptr++);
+		readSerial(buf);
 		read++;
+		//writeStringToSerial("! read 0x", 10);
+		//printU8(*buf);
+		//writeSerial('\n');
+
+		/* echo */
+		writeSerial(*buf);
+		/* exit on linebreak */
+		if (*buf == '\n' || *buf == '\r')
+			break;
+		buf++;
 	}
+	//writeStringToSerial("! read -> 0x", 13);
+	//printU32(len);
+	//writeSerial('\n');
 	return read;
 }
 
@@ -126,6 +135,10 @@ void *_sbrk_r (struct _reent *reent, ptrdiff_t incr) {
 
 	static int *heap_end = NULL;
 	int *prev_heap_end;
+
+	writeStringToSerial("\n! sbrk 0x", 10);
+	printU32(incr);
+	writeSerial('\n');
 
 	if (heap_end == NULL) {
 		heap_end = &_heap_start;

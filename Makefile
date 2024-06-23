@@ -5,7 +5,7 @@ LIBC=newlib/newlib/build/libc.a
 
 OPT=-Os -finline-limit=1000
 
-CFLAGS=-g $(OPT) -std=c99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
+CFLAGS=-g -Wall $(OPT) -std=c99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
 CXXFLAGS=$(CFLAGS) -nostdinc++ -fno-rtti -fno-exceptions
 LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -m68030 -Wl,--script=build/m${MACHINE}.ld
 PREFIX=m68k-linux-gnu
@@ -37,7 +37,7 @@ NEWLIB_CFLAGS= \
 all: hi.bin lo.bin
 
 # Putting crt0.o first makes the objdump disasm clearer
-main.elf: crt0_mem.o main.o serial.o $(LIBC) os_compat.o
+main.elf: crt0_mem.o console.o print_utils.o serial.o $(LIBC) os_compat.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 rom.bin: main.elf
