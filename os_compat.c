@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include "serial.h"
 
 /* Write is actually the only thing we provide. All other are stubs.. */
 
@@ -19,7 +20,7 @@ _write_r(struct _reent * reent, int fd, const void *buf, size_t nbytes)
 	char* b = (char*) buf;
 
 	for (i = 0; i < nbytes; i++) {
-		_serial_outbyte (*(b++));
+		writeSerial (*(b++));
 	}
 	return (nbytes);
 }
@@ -48,8 +49,8 @@ _execve_r(struct _reent *reent, const char *name, char * const *argv,
 int
 _fstat_r(struct _reent *reent, int fildes, struct stat *st)
 {
-	reent->_errno = ENOSYS;
-	return -1;
+	st->st_mode = S_IFCHR;
+	return 0;
 }
 
 int
@@ -90,8 +91,7 @@ _link_r(struct _reent *reent, const char *existing, const char *new)
 _off_t
 _lseek_r(struct _reent *reent, int file, _off_t ptr, int dir)
 {
-	reent->_errno = ENOSYS;
-	return -1;
+	return 0; //TODO: this does nothing cause serial can't seek
 }
 
 int
@@ -104,8 +104,13 @@ _open_r(struct _reent *reent, const char *file, int flags, int mode)
 _ssize_t
 _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 {
-	reent->_errno = ENOSYS;
-	return -1;
+	int read = 0;
+
+	for (; len > 0; --len) {
+		readSerial((char *)ptr++);
+		read++;
+	}
+	return read;
 }
 
 int
@@ -116,8 +121,24 @@ _readlink_r(struct _reent *reent, const char *path, char *buf, size_t bufsize)
 }
 
 void *_sbrk_r (struct _reent *reent, ptrdiff_t incr) {
-	reent->_errno = ENOSYS;
-	return NULL;
+	extern int _heap_start;
+	extern int _heap_end;
+
+	static int *heap_end = NULL;
+	int *prev_heap_end;
+
+	if (heap_end == NULL) {
+		heap_end = &_heap_start;
+	}
+
+	prev_heap_end = heap_end;
+	heap_end += incr;
+
+	if(heap_end >= &_heap_end) {
+		reent->_errno = ENOMEM;
+		return (void *)-1;
+	}
+	return (void *) prev_heap_end;
 }
 
 int

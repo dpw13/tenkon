@@ -4,9 +4,9 @@
 
 void printNibble(const uint8_t val) {
     if (val >= 10) {
-        writeCharToSerial('A' + val - 10);
+        writeSerial('A' + val - 10);
     } else {
-        writeCharToSerial('0' + val);
+        writeSerial('0' + val);
     }
 }
 
@@ -43,17 +43,17 @@ void main(void) {
     printU32(_heap_start);
     writeStringToSerial(" at 0x", 6);
     printU32((uint32_t)&_heap_start);
-    writeCharToSerial('\n');
+    writeSerial('\n');
 
     buf = (uint32_t *)&_heap_start;
 
     for(offset = 0; offset < SRAM_TEST_COUNT; offset++) {
-        writeCharToSerial('0');
-        writeCharToSerial('x');
+        writeSerial('0');
+        writeSerial('x');
         printU32((uint32_t) buf);
-        writeCharToSerial('=');
+        writeSerial('=');
         printU32(*buf++);
-        writeCharToSerial('\n');
+        writeSerial('\n');
     }
     while (1);
 }

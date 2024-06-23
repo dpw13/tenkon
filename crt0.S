@@ -3,6 +3,7 @@
         .title "Minimum crt0.S for m68k bare metal"
 
         .extern main
+        .extern initializeSerial
 
         .section .init
         .align 2
@@ -11,7 +12,8 @@
         .globl _start
 
         /* Jump to main() */
-_start: jmp     main
+_start: call    initializeSerial
+        jmp     main
 
         /* In a bare metal environment, main() should not return as there is
          * nowhere to resume execution from. Behaviour is undefined if this
