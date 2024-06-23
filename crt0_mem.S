@@ -50,18 +50,4 @@ _start:
          * nowhere to resume execution from. Behaviour is undefined if this
          * happens! */
 
-/*
- * __DefaultInterrupt handles all interrupt and exception vectors that have not
- * been overridden by the programmer.
- *
- * Unless handled more specifically, all exceptions and interrupts are masked
- * and the CPU stops executing.
- */
-        .type __DefaultInterrupt, @function
-        .weak __DefaultInterrupt
-        .globl __DefaultInterrupt
-__DefaultInterrupt:
-        stop    #0x2700
-        bra     .
-
         .end
