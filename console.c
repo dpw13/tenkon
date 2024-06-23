@@ -12,7 +12,7 @@ char memRead(const int addr) {
 void run(const int addr) {
     // Do not do this. Seriously under no circumstances
     // should you copy this code into any other program!
-    // Should you decide to do so your decendants will
+    // Should you decide to do so your descendants will
     // curse you and the day you did for generations
     ((void (*)(void))addr)();
 }
@@ -53,19 +53,19 @@ void consoleLoop() {
         switch(cmd) {
             case 'L':  //Load
             case 'l':
-                scanf("%02x", &addr);
+                scanf("%x", &addr);
                 loadData(addr);
                 scanf("%c", &cmd); //Throw away the extra Z
                 break;
             case 'P':  //Peek
             case 'p':
-                scanf("%02x", &addr);
+                scanf("%x", &addr);
                 scanf("%d", &size);
                 showData(addr, size);
                 break;
             case 'R':  //Run
             case 'r':
-                scanf("%02x", &addr);
+                scanf("%x", &addr);
                 run(addr);
                 break;
             default:
