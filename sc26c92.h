@@ -80,7 +80,7 @@ typedef struct {
 #define ACR_CTMODE_TIMER_CLK_DIV_16 (7 << 4)
 
 #define CSR_BAUD_EXT2_115_2K    0x6
-#define CSR_BAUD_EXT2_57_6K     0x8 4f7a4f7a 01001111 01111010
+#define CSR_BAUD_EXT2_57_6K     0x8
 #define CSR_BAUD_EXT2_38_4K     0xC
 #define CSR_BAUD_EXT2_28_8K     0x4
 #define CSR_BAUD_EXT2_9600      0xB

@@ -25,13 +25,23 @@ _start:
         movea.l #_bss_end, %a1          /* End address */
 
 2:      cmpa.l  %a1, %a0                /* Check if start < end */
-        bge     7f
+        bge     3f
 
         clr.w   %a0@+                   /* Clear word and increment start */
 
         bra     2b
 
         /* Copy initialised data from ROM to RAM */
+3:      movea.l #_rodata_end, %a0       /* Source address */
+        movea.l #_data_start, %a1       /* Destination start address */
+        movea.l #_data_end, %a2         /* Destination end address */
+
+4:      cmpa.l  %a2, %a1                /* Check if start < end */
+        bge     7f
+
+        move.w  %a0@+, %a1@+            /* Copy a word from ROM to RAM */
+
+        bra     4b
 
         /* Jump to main() */
 7:      jmp     main

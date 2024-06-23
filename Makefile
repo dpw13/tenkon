@@ -3,9 +3,11 @@ MACHINE=68030
 LIBC_INC=-Inewlib/newlib/libc/include -Inewlib/newlib/build/targ-include
 LIBC=newlib/newlib/build/libc.a
 
-CFLAGS=-Os -g -std=c99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
+OPT=-Os -finline-limit=1000
+
+CFLAGS=-g $(OPT) -std=c99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
 CXXFLAGS=$(CFLAGS) -nostdinc++ -fno-rtti -fno-exceptions
-LDFLAGS=-g -Os -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -m68030 -Wl,--script=build/m${MACHINE}.ld
+LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -m68030 -Wl,--script=build/m${MACHINE}.ld
 PREFIX=m68k-linux-gnu
 
 CC=$(PREFIX)-gcc
@@ -35,7 +37,7 @@ NEWLIB_CFLAGS= \
 all: hi.bin lo.bin
 
 # Putting crt0.o first makes the objdump disasm clearer
-main.elf: crt0.o main.o serial.o $(LIBC) os_compat.o
+main.elf: crt0_mem.o main.o serial.o $(LIBC) os_compat.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 rom.bin: main.elf
@@ -53,4 +55,6 @@ $(LIBC): newlib/newlib/build/Makefile
 
 clean:
 	rm -f main *.o *.elf *.bin
+
+distclean: clean
 	rm -rf newlib/newlib/build
