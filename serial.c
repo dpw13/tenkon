@@ -16,7 +16,7 @@ void initializeSerial() {
     term_regs->A.CR = CR_CMD_RESET_RX;
     term_regs->A.CR = CR_CMD_RESET_MR0;
     term_regs->ACR = ACR_BAUDGEN_TABLE_0 | ACR_CTMODE_COUNTER_IP2;
-    term_regs->A.CSR = CSR_BAUD_TX(0xB) | CSR_BAUD_RX(0xB);
+    term_regs->A.CSR = CSR_BAUD_TX(CSR_BAUD_EXT2_57_6K) | CSR_BAUD_RX(CSR_BAUD_EXT2_57_6K);
     term_regs->A.MR = MR0_DIS_WDT | MR0_TX_FULL_THRESH_4 | MR0_BAUD_EXT2;
     term_regs->A.MR = MR1_EN_RX_RTS | MR1_NO_PARITY | MR1_BPC_8;
     term_regs->A.MR = MR2_DIS_TX_RTS | MR2_DIS_CTS_TX | MR2_STOP_LEN_1_00;
