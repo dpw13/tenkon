@@ -28,22 +28,27 @@ READ = RW
 
 BERR = BUSBERR + WATCHDOGBERR
 
-UUCS = RW + /A0 * /A1
+; These are actually write enables. The /SRAMSELECT signal keeps these chips in powerdown
+; until they're accessed, so we don't check the upper address bits here.
 
-UMCS = RW
-       + A0 * /A1
-       + /A1 * /SIZ0
-       + /A1 * SIZ1
+; D31-D24, bottom byte in memory. Wrapping accesses across word boundaries are not allowed,
+; so the only way to access this byte is directly (0b00).
+UUCS = /RW * AS * /A0 * /A1
 
-LMCS = RW
-     + /A0 * A1
-     + /A1 * /SIZ0 * /SIZ1
-     + /A1 * SIZ0 * SIZ1
-     + /A1 * A0 * /SIZ0
+; D16-23, byte 0b01.
+UMCS = /RW * AS * A0 * /A1    ; Direct access
+     + /RW * AS * /A1 * /SIZ0 ; Access to 0b0X with size 1 or 3
+     + /RW * AS * /A1 * SIZ1  ; Access to 0b0X with size 2 or 4
 
-LLCS = RW
-     + A0 * A1
-     + A0 * SIZ0 * SIZ1
-     + /SIZ0 * /SIZ1
-     + A1 * SIZ1
+; D8-15, byte 0b10
+LMCS = /RW * AS * /A0 * A1              ; Direct access
+     + /RW * AS * /A1 * /SIZ0 * /SIZ1   ; Access to 0b0X with size 4
+     + /RW * AS * /A1 * SIZ0 * SIZ1     ; Access to 0b0X with size 3
+     + /RW * AS * /A1 * A0 * /SIZ0      ; Access to 0b01 with size 1 or 3
+
+; D0-7, byte 0b11
+LLCS = /RW * AS * A0 * A1          ; Direct access
+     + /RW * AS * A0 * SIZ0 * SIZ1 ; Access to 0bX1 with size 3
+     + /RW * AS * /SIZ0 * /SIZ1    ; Access to any address with size 4
+     + /RW * AS * A1 * SIZ1        ; Access to 0b1X with size 1 or 3
 
