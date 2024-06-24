@@ -1,0 +1,31 @@
+GAL22V10
+DRAM_CTRL
+
+; Name     DRAM_CTRL
+; PartNo   00
+; Date     6/24/2024
+; Revision 01
+; Designer Dylan Enloe
+; Company  Test
+; Assembly None
+; Location
+; Device   p22v10
+
+; See https://www.pjrc.com/mp3/simm/datasheet.html for RAS/CAS layout. We are working
+; with rank 2 32 MB SIMMs with each CASx line controlling a byte.
+
+DRAMCLK  /CS      /AS      NC       /DTACK   NC       /ADDW    NC       NC       A26      A27      GND
+NC       /STERM   NC       NC       NC       NC       /ENCAS0  /ENCAS1  /ENCAS2  /ENCAS3  /AREQ    VCC
+
+; Start a transfer as soon as CS asserts (which is already gated by AS in DRAM_CS)
+AREQ = CS
+; The DP8422V is already configured to delay DTACK appropriately, so we don't need to clock it
+; further here. As soon as it asserts the transaction can end. 
+STERM = CS & DTACK
+
+; Bank controls. These would enable up to 8 SIMM slots, but only 2 are populated on
+; this board so we always enable bank 0.
+ENCAS0 = VCC
+ENCAS1 = GND
+ENCAS2 = GND
+ENCAS3 = GND
