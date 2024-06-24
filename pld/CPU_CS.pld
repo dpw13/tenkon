@@ -21,11 +21,28 @@ A20   NC    NC    NC    /EXTCS /ROMCS  /SRAMCS  FC1   FC0   /BOOTSTRAP   /AS   V
 ;VALIDSPACE = /FC1 * FC0 + FC1 * /FC0
 
 ; All equations must be expanded in the form of sum-of-products (SOP)
-; ROM 0x00_0000 - 0x0F_FFFF
-ROMCS  = AS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
-; SRAM 0x10_0000 - 0x1F_FFFF
-SRAMCS = AS *  A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
-; Off-board 0xF000_0000 - 0xFFFF_FFFF, data only.
-EXTCS = /FC1 * FC0 * AS * A31 * A30 * A29 * A28
+; ROM 0xFFF0_0000 - 0xFFFF_FFFF
+;     0x0000_0000 - 0x000F_FFFF (bootstrap only)
+ROMCS  =              AS *  A20 *  A21 *  A22 *  A23 *  A24 *  A25 *  A26 *  A27 *  A28 *  A29 *  A30 *  A31
+        + BOOTSTRAP * AS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; SRAM 0x00_0000 - 0x0F_FFFF (after bootstrap only)
+SRAMCS = /BOOTSTRAP * AS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; Off-board 0x0100_0000 - 0xFEFF_FFFF, data only. Note that 14 is the max number of product terms.
+EXTCS  = /FC1 * FC0 * AS *  A31 *  A30 *  A29 *  A28 *  A27 *  A26 *  A25 * /A24                      ; FE
+       + /FC1 * FC0 * AS *  A31 *  A30 *  A29 *  A28 *  A27 *  A26 * /A25                             ; FC-FD
+       + /FC1 * FC0 * AS *  A31 *  A30 *  A29 *  A28 *  A27 * /A26                                    ; F8-FB
+       + /FC1 * FC0 * AS *  A31 *  A30 *  A29 *  A28 * /A27                                           ; F0-F7
+       + /FC1 * FC0 * AS *  A31 *  A30 *  A29 * /A28                                                  ; E0-EF
+       + /FC1 * FC0 * AS *  A31 *  A30 * /A29                                                         ; C0-DF
+       + /FC1 * FC0 * AS *  A31 * /A30                                                                ; 80-BF
+       + /FC1 * FC0 * AS * /A31 *  A30                                                                ; 40-7F
+       + /FC1 * FC0 * AS * /A31 * /A30 *  A29                                                         ; 20-3F
+       + /FC1 * FC0 * AS * /A31 * /A30 * /A29 *  A28                                                  ; 10-1F
+       + /FC1 * FC0 * AS * /A31 * /A30 * /A29 * /A28 *  A27                                           ; 08-0F
+       + /FC1 * FC0 * AS * /A31 * /A30 * /A29 * /A28 * /A27 *  A26                                    ; 04-07
+       + /FC1 * FC0 * AS * /A31 * /A30 * /A29 * /A28 * /A27 * /A26 *  A25                             ; 02-03
+       + /FC1 * FC0 * AS * /A31 * /A30 * /A29 * /A28 * /A27 * /A26 * /A25 *  A24                      ; 01
 
 

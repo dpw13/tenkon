@@ -5,14 +5,16 @@ _sram_sz = 0x080000;
 _stack_sz = 4K;
 
 MEMORY {
-    rom     (rx!w) : ORIGIN = 0x000000, LENGTH = _rom_sz
-    sram    (rwx)  : ORIGIN = 0x100000, LENGTH = _sram_sz
+    rom     (rx!w) : ORIGIN = 0xFFF00000, LENGTH = _rom_sz
+    sram    (rwx)  : ORIGIN = 0x00000000, LENGTH = _sram_sz
 }
 
 /* Section Definitions */
-/* Credit to https://github.com/tomstorey/m68k_bare_metal/blob/master/standalone/platform.ld */ 
+/* Credit to https://github.com/tomstorey/m68k_bare_metal/blob/master/standalone/platform.ld */
 SECTIONS {
-    .evt : {
+    .evt_rom : {
+        _evt_start = .;
+
         /* Reset vector */
         LONG(_stack_end);                /* Initial SSP */
         LONG(ABSOLUTE(_start));         /* Initial PC */
@@ -85,7 +87,7 @@ SECTIONS {
  *   Hex    Dec       Hex      Dec
  *   40-FF  64-255    100-3FC  256-1020
  *
- * To calculate the offset within the .evt section to place your vector, use
+ * To calculate the offset within the .evt_rom section to place your vector, use
  * the following calculation (assuming vector number = 0x50):
  *
  *   0x50 * 4 = 0x140
@@ -97,6 +99,7 @@ SECTIONS {
  *   LONG(ABSOLUTE(NameOfHandlerFunction));
  */
         . = 0x400;
+        _evt_end = .;
     } > rom
 
     .text : {
@@ -113,6 +116,11 @@ SECTIONS {
         . = ALIGN(0x10);
         _rodata_end = .;
     } > rom
+
+    .evt_ram : {
+        /* Reserve space for exception vectors in RAM */
+        . = 0x400;
+    }
 
     .data : AT(_rodata_end) {
         _data_start = .;
@@ -131,7 +139,7 @@ SECTIONS {
 
     .heap : {
         _heap_start = .;
-        . += _sram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data);
+        . += _sram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data) - SIZEOF(.evt_ram);
         _heap_end = .;
     } > sram
 
@@ -140,5 +148,5 @@ SECTIONS {
         . += _stack_sz;
         _stack_end = .;
     } > sram
-    
+
 }

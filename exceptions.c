@@ -60,11 +60,12 @@ INIT_VEC __DefaultInterrupt(void) {
     }
 
     writeStringToSerial("! Caught exception ", 19);
+    printU8(vec_idx);
+    writeSerial(' ');
     if (vec_idx < sizeof(EXCEPTION_NAMES)/sizeof(char *)) {
         writeStringToSerial(EXCEPTION_NAMES[vec_idx], strlen(EXCEPTION_NAMES[vec_idx]));
     } else {
-        writeStringToSerial("unknown: 0x", 8);
-        printU8(vec_idx);
+        writeStringToSerial("unknown", 8);
     }
     writeSerial('\n');
 

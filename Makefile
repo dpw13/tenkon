@@ -7,7 +7,7 @@ OPT=-Os -finline-limit=1000
 
 CFLAGS=-g -Wall $(OPT) -std=gnu99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
 CXXFLAGS=$(CFLAGS) -nostdinc++ -fno-rtti -fno-exceptions
-LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -m68030 -Wl,--script=build/m${MACHINE}.ld
+LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -Wl,--discard-locals -m68030 -Wl,--script=build/m${MACHINE}.ld
 PREFIX=m68k-linux-gnu
 
 CC=$(PREFIX)-gcc
