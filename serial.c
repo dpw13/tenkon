@@ -23,6 +23,10 @@ void initializeSerial() {
     term_regs->A.CR = CR_CMD_NONE | CR_ENA_RX | CR_ENA_TX;
 }
 
+void forceWriteSerial(const char c) {
+    term_regs->A.TxFIFO = c;
+}
+
 void writeSerial(const char c) {
     // Busy wait until ready...probably not the best
     while( !(term_regs->A.SR & 0x04) ) {}

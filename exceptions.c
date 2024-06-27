@@ -69,7 +69,7 @@ INIT_VEC __DefaultInterrupt(void) {
     }
     writeSerial('\n');
 
-    for (int8_t word = 0; word <= frame_size; word++) {
+    for (int8_t word = 0; word < frame_size; word++) {
         printU8(word);
         writeStringToSerial(": ", 3);
         printU16(fp[word]);
@@ -94,4 +94,15 @@ INIT_VEC __DefaultInterrupt(void) {
 
     asm("stop #0x2700");
     while (1);
+}
+
+INIT_VEC Line1111Emulator(void) {
+    //uint16_t* fp = __builtin_frame_address(0) + 4;
+
+    forceWriteSerial('!');
+    forceWriteSerial('F');
+
+    /* Force a bad access */
+    *(uint8_t *)0x10000000 = 0;
+    asm("stop #0x2700");
 }
