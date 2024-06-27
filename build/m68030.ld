@@ -120,7 +120,7 @@ SECTIONS {
     .evt_ram : {
         /* Reserve space for exception vectors in RAM */
         . = 0x400;
-    }
+    } > sram
 
     .data : AT(_rodata_end) {
         _data_start = .;
@@ -144,7 +144,7 @@ SECTIONS {
     } > sram
 
     .stack : {
-        _stack_start = 0x180000;
+        _stack_start = .;
         . += _stack_sz;
         _stack_end = .;
     } > sram

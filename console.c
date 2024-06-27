@@ -3,15 +3,31 @@
 #include <stdlib.h>
 #include "serial.h"
 
-void memWrite(const char b, const int addr) {
-    *(char *)addr = b;
+inline void memWriteByte(const uint8_t b, const uintptr_t addr) {
+    *(uint8_t *)addr = b;
 }
 
-char memRead(const int addr) {
-   return *(char *)addr;
+inline void memWriteWord(const uint16_t b, const uintptr_t addr) {
+    *(uint16_t *)addr = b;
 }
 
-void run(const int addr) {
+inline void memWriteLWord(const uint32_t b, const uintptr_t addr) {
+    *(uint32_t *)addr = b;
+}
+
+inline uint8_t memReadByte(const uintptr_t addr) {
+   return *(uint8_t *)addr;
+}
+
+inline uint16_t memReadWord(const uintptr_t addr) {
+   return *(uint16_t *)addr;
+}
+
+inline uint32_t memReadLWord(const uintptr_t addr) {
+   return *(uint32_t *)addr;
+}
+
+void run(const uintptr_t addr) {
     // Do not do this. Seriously under no circumstances
     // should you copy this code into any other program!
     // Should you decide to do so your descendants will
@@ -19,23 +35,73 @@ void run(const int addr) {
     ((void (*)(void))addr)();
 }
 
-void loadData(int addr) {
-    char value = 0;
+void loadBytes(uintptr_t addr) {
+    uint8_t value = 0;
+
     while(scanf("%02hhx", &value)) {
-        memWrite(value, addr);
-        addr++;
+        memWriteByte(value, addr);
+        addr += sizeof(value);
     }
 }
 
-void showData(int addr, const int size) {
+void loadWords(uintptr_t addr) {
+    uint16_t value = 0;
+
+    while(scanf("%04hx", &value)) {
+        memWriteWord(value, addr);
+        addr += sizeof(value);
+    }
+}
+
+void loadLWords(uintptr_t addr) {
+    uint32_t value = 0;
+
+    while(scanf("%08x", &value)) {
+        memWriteLWord(value, addr);
+        addr += sizeof(value);
+    }
+}
+
+void showBytes(uintptr_t addr, const int size) {
+    const uintptr_t target = addr + size;
+
     printf("         | 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15\n");
-    const int target = addr + size;
-    addr = (addr / 16) * 16;
+    addr &= ~0 << 4;
     while(addr < target) {
         printf("%08x | ", addr);
         for(int j = 0; j < 16; j++) {
-            printf("%02hhx ", memRead(addr));
-            addr++;
+            printf("%02hhx ", memReadByte(addr));
+            addr += sizeof(uint8_t);
+        }
+        printf("\n");
+    }
+}
+
+void showWords(uintptr_t addr, const int size) {
+    const uintptr_t target = addr + size;
+
+    printf("         | 00   02   04   06   08   10   12   14\n");
+    addr &= ~0 << 4;
+    while(addr < target) {
+        printf("%08x | ", addr);
+        for(int j = 0; j < 16; j++) {
+            printf("%04hx ", memReadWord(addr));
+            addr += sizeof(uint16_t);
+        }
+        printf("\n");
+    }
+}
+
+void showLWords(uintptr_t addr, const int size) {
+    const uintptr_t target = addr + size;
+
+    printf("         | 00       04       08       12\n");
+    addr &= ~0 << 4;
+    while(addr < target) {
+        printf("%08x | ", addr);
+        for(int j = 0; j < 16; j++) {
+            printf("%08x ", memReadLWord(addr));
+            addr += sizeof(uint32_t);
         }
         printf("\n");
     }
@@ -44,7 +110,7 @@ void showData(int addr, const int size) {
 /* Note that this overwrites values in memory in the specified window, so
  * avoid calling this with a window that overlaps the current stack.
  */
-void memTest(const int addr, const int size) {
+void memTest(const uintptr_t addr, const int size) {
     uint32_t *buf;
     uint32_t offset;
     uint32_t errCount;
@@ -83,6 +149,14 @@ void contextInfo(void) {
     void *retAddr = __builtin_return_address(0);
     void *framePtr;
     void *stackPtr;
+    // Remember that these are symbols with addresses but no allocated
+    // contents.
+    extern uint8_t _text_start;
+    extern uint8_t _data_start;
+    extern uint8_t _heap_start;
+    extern uint8_t _heap_end;
+    extern uint8_t _stack_start;
+    extern uint8_t _stack_end;
 
     asm volatile ("movew %%sr, %0"
         : "=r" (statusReg));
@@ -90,16 +164,21 @@ void contextInfo(void) {
         : "=r" (framePtr));
     asm volatile ("movel %%sp, %0"
         : "=r" (stackPtr));
-    
+
     printf("Caller: %p\n", retAddr);
     printf("FP: %p\n", framePtr);
     printf("SP: %p\n", stackPtr);
-    printf("SR: %04hx\n", statusReg);
+    printf("SR: %04hx\n\n", statusReg);
+
+    printf("Code start: %p\n", &_text_start);
+    printf("Data start: %p\n", &_data_start);
+    printf("Heap: %p:%p\n", &_heap_start, &_heap_end);
+    printf("Stack: %p:%p\n", &_stack_start, &_stack_end);
 }
 
 void consoleLoop(void) {
     char cmd;
-    int addr = 0;
+    uintptr_t addr = 0;
     int size = 0;
     int line = 0;
 
@@ -111,15 +190,53 @@ void consoleLoop(void) {
         switch(cmd) {
             case 'L':  //Load
             case 'l':
-                scanf("%x", &addr);
-                loadData(addr);
+                if (scanf(".%c", &cmd)) {
+                    switch(cmd) {
+                        default:
+                            printf("Don't understand format '%c', using bytes\n", cmd);
+                            // Fallthrough
+                        case 'b':
+                        case 'B':
+                            scanf("%x", &addr);
+                            loadBytes(addr);
+                            break;
+                        case 'w':
+                        case 'W':
+                            scanf("%x", &addr);
+                            loadWords(addr);
+                            break;
+                        case 'l':
+                        case 'L':
+                            scanf("%x", &addr);
+                            loadLWords(addr);
+                            break;
+                    }
+                }
                 scanf("%c", &cmd); //Throw away the extra Z
                 break;
             case 'P':  //Peek
             case 'p':
                 scanf("%x", &addr);
                 scanf("%d", &size);
-                showData(addr, size);
+                if (scanf(".%c", &cmd)) {
+                    switch(cmd) {
+                        default:
+                            printf("Don't understand format '%c', using bytes\n", cmd);
+                            // Fallthrough
+                        case 'b':
+                        case 'B':
+                            showBytes(addr, size);
+                            break;
+                        case 'w':
+                        case 'W':
+                            showWords(addr, size);
+                            break;
+                        case 'l':
+                        case 'L':
+                            showLWords(addr, size);
+                            break;
+                    }
+                }
                 break;
             case 'R':  //Run
             case 'r':
