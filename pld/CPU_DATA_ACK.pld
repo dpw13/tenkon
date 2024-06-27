@@ -1,0 +1,28 @@
+GAL22V10
+CPU_DATA_ACK
+
+; Name     CPU_DATA_ACK ;
+; PartNo   00 ;
+; Date     3/29/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+NC         ROMDELAY   SRAMDELAY  /SRAMCS    /ROMCS     /COPDSACK0 /COPDSACK1 /BUSDSACK0 /BUSDSACK1 /BUSSTERM  NC         GND
+NC         NC         NC         NC         /STERM     /DSACK1    /DSACK0    NC         NC         NC         NC         VCC
+
+STERM = /ROMCS * /SRAMCS * BUSSTERM;
+
+; DSACK0 = BUSDSACK0 # COPDSACK0;
+; DSACK1 = BUSDSACK1 # COPDSACK1 # (ROMCS & ROMDELAY);
+
+DSACK0 = /ROMCS * /SRAMCS * BUSDSACK0
+       +            SRAMCS * SRAMDELAY;
+
+DSACK1 = /ROMCS * /SRAMCS * BUSDSACK1
+       +  ROMCS           * ROMDELAY
+       +           SRAMCS * SRAMDELAY;
+

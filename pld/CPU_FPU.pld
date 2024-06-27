@@ -1,0 +1,32 @@
+GAL22V10
+CPU_FPU
+
+; Name     CPU_FPU ;
+; PartNo   00 ;
+; Date     3/29/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+SYS_CLK    FC0        FC1        FC2        A19        A18        A17        A16        A15        A14        A13        GND
+NC         NC         CLK_BUS    CLK_CPU    CLK_CO     /BERR      /FPU_CS    /CPU_SPACE NC         CLK_DIV    /FPU_SENSE VCC
+
+/* CLOCK BUFFERS */
+CLK_DIV = SYS_CLK;
+CLK_CPU = SYS_CLK;
+CLK_CO  = SYS_CLK;
+CLK_BUS = SYS_CLK;
+
+CPU_SPACE = FC2 * FC1 * FC0 ;
+
+/* Probably needs AS, but can try without it */
+FPU_CS = FC2 * FC1 * FC0 * /A19 * /A18 * A17 * /A16 * /A15 * /A14 * A13 * FPU_SENSE;
+
+/* BERR is open drain from multiple sources */
+BERR = VCC;
+/* We could assert BERR when accessing CPU_SPACE but the watchdog will take care of it. */
+BERR.OE = GND;
+

@@ -19,7 +19,7 @@ NC       /STERM   NC       NC       NC       NC       /ENCAS0  /ENCAS1  /ENCAS2 
 
 ; Start a transfer as soon as CS asserts (which is already gated by AS in DRAM_CS)
 AREQ = CS
-; The DP8422V is already configured to delay DTACK appropriately, so we don't need to clock it
+; The DP8422V is already configured to delay DTACK appropriately so we don't need to clock it
 ; further here. As soon as it asserts the transaction can end. 
 STERM = CS & DTACK
 
