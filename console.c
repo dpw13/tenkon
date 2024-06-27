@@ -107,10 +107,30 @@ void showLWords(uintptr_t addr, const int size) {
     }
 }
 
+uint32_t getSequenceWord(const uintptr_t addr, const uint8_t mode) {
+    switch (mode) {
+        case '0':
+            return 0x00000000;
+        case '1':
+            return 0xFFFFFFFF;
+        case 'A': // alternating 0,1
+            return 0xAAAAAAAA;
+        case '5': // alternating 1,0
+            return 0x55555555;
+        case 's':
+        case 'S': // self-address
+            return addr;
+        case 'r':
+        case 'R':
+        default:
+            return rand();
+    }
+}
+
 /* Note that this overwrites values in memory in the specified window, so
  * avoid calling this with a window that overlaps the current stack.
  */
-void memTest(const uintptr_t addr, const int size) {
+void memTest(const uintptr_t addr, const uintptr_t size, const uint8_t mode) {
     uint32_t *buf;
     uint32_t offset;
     uint32_t errCount;
@@ -119,7 +139,7 @@ void memTest(const uintptr_t addr, const int size) {
     srand(0);
     buf = (uint32_t *)addr;
     for (offset = 0; offset < size; offset += sizeof(uint32_t)) {
-        *buf++ = rand();
+        *buf++ = getSequenceWord(addr + offset, mode);
     }
 
     /* Reset PRNG sequence */
@@ -127,7 +147,7 @@ void memTest(const uintptr_t addr, const int size) {
     buf = (uint32_t *)addr;
     errCount = 0;
     for (offset = 0; offset < size; offset += sizeof(uint32_t)) {
-        uint32_t val = rand();
+        uint32_t val = getSequenceWord(addr + offset, mode);
         if (*buf != val) {
             /* Only print first error */
             if (errCount == 0) {
@@ -190,27 +210,28 @@ void consoleLoop(void) {
         switch(cmd) {
             case 'L':  //Load
             case 'l':
-                if (scanf(".%c", &cmd)) {
-                    switch(cmd) {
-                        default:
-                            printf("Don't understand format '%c', using bytes\n", cmd);
-                            // Fallthrough
-                        case 'b':
-                        case 'B':
-                            scanf("%x", &addr);
-                            loadBytes(addr);
-                            break;
-                        case 'w':
-                        case 'W':
-                            scanf("%x", &addr);
-                            loadWords(addr);
-                            break;
-                        case 'l':
-                        case 'L':
-                            scanf("%x", &addr);
-                            loadLWords(addr);
-                            break;
-                    }
+                if (!scanf(".%c", &cmd)) {
+                    cmd = 'B';
+                }
+                switch(cmd) {
+                    default:
+                        printf("Don't understand format '%c', using bytes\n", cmd);
+                        // Fallthrough
+                    case 'b':
+                    case 'B':
+                        scanf("%x", &addr);
+                        loadBytes(addr);
+                        break;
+                    case 'w':
+                    case 'W':
+                        scanf("%x", &addr);
+                        loadWords(addr);
+                        break;
+                    case 'l':
+                    case 'L':
+                        scanf("%x", &addr);
+                        loadLWords(addr);
+                        break;
                 }
                 scanf("%c", &cmd); //Throw away the extra Z
                 break;
@@ -218,24 +239,25 @@ void consoleLoop(void) {
             case 'p':
                 scanf("%x", &addr);
                 scanf("%d", &size);
-                if (scanf(".%c", &cmd)) {
-                    switch(cmd) {
-                        default:
-                            printf("Don't understand format '%c', using bytes\n", cmd);
-                            // Fallthrough
-                        case 'b':
-                        case 'B':
-                            showBytes(addr, size);
-                            break;
-                        case 'w':
-                        case 'W':
-                            showWords(addr, size);
-                            break;
-                        case 'l':
-                        case 'L':
-                            showLWords(addr, size);
-                            break;
-                    }
+                if (!scanf(".%c", &cmd)) {
+                    cmd = 'B';
+                }
+                switch(cmd) {
+                    default:
+                        printf("Don't understand format '%c', using bytes\n", cmd);
+                        // Fallthrough
+                    case 'b':
+                    case 'B':
+                        showBytes(addr, size);
+                        break;
+                    case 'w':
+                    case 'W':
+                        showWords(addr, size);
+                        break;
+                    case 'l':
+                    case 'L':
+                        showLWords(addr, size);
+                        break;
                 }
                 break;
             case 'R':  //Run
@@ -245,9 +267,13 @@ void consoleLoop(void) {
                 break;
             case 'M': //Memtest
             case 'm':
+                if (!scanf(".%c", &cmd)) {
+                    // Default to random data
+                    cmd = 'R';
+                }
                 scanf("%x", &addr);
                 scanf("%d", &size);
-                memTest(addr, size);
+                memTest(addr, size, cmd);
                 break;
             case 'i': //Context info
             case 'I':
