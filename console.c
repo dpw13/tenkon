@@ -155,7 +155,20 @@ void memTest(const uintptr_t addr, const uintptr_t size, const uint8_t mode) {
             }
             errCount += 1;
         }
-        buf++;
+        *buf++ = ~val;
+    }
+
+    if(mode != 'r' && mode != 'R') {
+        for(offset = size; offset > 0; offset -= sizeof(uint32_t)) {
+            uint32_t val = ~ getSequenceWord(addr + offset, mode);
+            if (*buf != val) {
+                if (errCount == 0) {
+                    printf("Mismatch at %p: expected %08x but read %08x. Supressing further error messages.\n", buf, val, *buf);
+                }
+                errCount += 1;
+            }
+            buf++;
+        }
     }
 
     printf("Found %d errors\n", errCount);
