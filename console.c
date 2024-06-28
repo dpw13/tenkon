@@ -160,7 +160,7 @@ void memTest(const uintptr_t addr, const uintptr_t size, const uint8_t mode) {
 
     /* If the mode isn't random check the inverted values */
     if(mode != 'r' && mode != 'R') {
-        printf("Checking Inverted Pattern");
+        printf("Checking Inverted Pattern\n");
         buf = (uint32_t *)(addr + size);
         for(offset = size; offset > 0; offset -= sizeof(uint32_t)) {
             uint32_t val = ~ getSequenceWord(addr + offset, mode);
