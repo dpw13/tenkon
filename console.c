@@ -84,7 +84,7 @@ void showWords(uintptr_t addr, const int size) {
     addr &= ~0 << 4;
     while(addr < target) {
         printf("%08x | ", addr);
-        for(int j = 0; j < 16; j++) {
+        for(int j = 0; j < 8; j++) {
             printf("%04hx ", memReadWord(addr));
             addr += sizeof(uint16_t);
         }
@@ -99,7 +99,7 @@ void showLWords(uintptr_t addr, const int size) {
     addr &= ~0 << 4;
     while(addr < target) {
         printf("%08x | ", addr);
-        for(int j = 0; j < 16; j++) {
+        for(int j = 0; j < 4; j++) {
             printf("%08x ", memReadLWord(addr));
             addr += sizeof(uint32_t);
         }
@@ -155,6 +155,7 @@ void memTest(const uintptr_t addr, const uintptr_t size, const uint8_t mode) {
             }
             errCount += 1;
         }
+        buf++;
     }
 
     printf("Found %d errors\n", errCount);
@@ -188,7 +189,7 @@ void contextInfo(void) {
     printf("Caller: %p\n", retAddr);
     printf("FP: %p\n", framePtr);
     printf("SP: %p\n", stackPtr);
-    printf("SR: %04hx\n\n", statusReg);
+    printf("SR: 0x%04hx\n\n", statusReg);
 
     printf("Code start: %p\n", &_text_start);
     printf("Data start: %p\n", &_data_start);
@@ -213,23 +214,21 @@ void consoleLoop(void) {
                 if (!scanf(".%c", &cmd)) {
                     cmd = 'B';
                 }
+                scanf("%x", &addr);
                 switch(cmd) {
                     default:
                         printf("Don't understand format '%c', using bytes\n", cmd);
                         // Fallthrough
                     case 'b':
                     case 'B':
-                        scanf("%x", &addr);
                         loadBytes(addr);
                         break;
                     case 'w':
                     case 'W':
-                        scanf("%x", &addr);
                         loadWords(addr);
                         break;
                     case 'l':
                     case 'L':
-                        scanf("%x", &addr);
                         loadLWords(addr);
                         break;
                 }
@@ -237,11 +236,11 @@ void consoleLoop(void) {
                 break;
             case 'P':  //Peek
             case 'p':
-                scanf("%x", &addr);
-                scanf("%d", &size);
                 if (!scanf(".%c", &cmd)) {
                     cmd = 'B';
                 }
+                scanf("%x", &addr);
+                scanf("%d", &size);
                 switch(cmd) {
                     default:
                         printf("Don't understand format '%c', using bytes\n", cmd);
@@ -287,7 +286,13 @@ void consoleLoop(void) {
 }
 
 int main(void) {
+    // This should go before any other initialization so we can print exceptions.
     initializeSerial();
+
+    // Initialize DRAM
+    // TODO: code out the bitfields used here instead of this magic number.
+    //*((uint8_t *)0xF8EBE583) = 0;
+
     writeStringToSerial("Init\n", 5);
 
     printf("Welcome to the Tenkon Basic Console!\n");

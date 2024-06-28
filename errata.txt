@@ -1,16 +1,76 @@
 CPU Board:
-TODO
+ROMs need to be connected to A[19:1], not A[A20:2].
+    * Cut A20 and replace with bodge to A1, then remap ROM data accordingly
+ROM DQ[7:3] reversed when connecting to D[23:19] (currently connected to D[19:23])
+Recommend routing /DBERR and /STATUS to jumper pins for easier debugging
+* DIR is CORRECT polarity on data transceivers
+Data transceivers /OE should be driven from PLD logic, not just BG
 
 IO Board:
 Data buffer ~OE control should be AND of all CS signals on the board
     U16.19 to U10.21, add PLD output
 XXX Data buffer DIR polarity is wrong - I was wrong about being wrong, R!W is correct!
     U16.1 to U10.23
+DIR is wrong polarity on data transceivers
 
-OK READ r!w = 1
-cpu -> xcvr -> bus -> xcvr -> io
-       dir=1          dir=0
+DRAM board:
+SIMM banks should be connected something like this for rank 2 SIMMs and remove J2:
+    U1.RAS0     /RAS0       U2.RAS0     /RAS1
+    U1.RAS1     /RAS2       U2.RAS1     /RAS3
+    U1.RAS2     /RAS0       U2.RAS2     /RAS1
+    U1.RAS3     /RAS2       U2.RAS3     /RAS3
+Add jumper to enable RAS1, RAS3 and/or drive DP8422V B[1:0] from PLD
+Suggest handling /CBREQ and /CBACK in CS PLD for burst accesses and drive /COLINC from same PLD
 
-OK WRITE r!w = 0
-cpu -> xcvr -> bus -> xcvr -> io
-       dir=0          dir=1
+Rework:
+cut U1.34, /RAS2_SLOTA
+cut U1.45, /RAS1 (R13)
+cut U1.33, /RAS3_SLOTA
+connect U1.34 to U1.44, /RAS0
+connect U1.45 to J2.5, /RAS2_SLOTA
+connect U1.33 to U1.45
+
+cut U2.44, /RAS2_SLOTB
+connect U2.44 to R13, /RAS1
+connect U2.34 (NC) to U2.44
+connect U2.33 (NC) to U2.45
+
+I would tie any unconnected address lines (A11, A12 on SIMMs) to ground.
+I recommend renaming /ENCASx to /ENBANKx to clarify that these are not the same
+    as /ECASx on the DP8422V
+DRAM source termination lines should be placed as close to DP8422V as possible
+DIR is wrong polarity on data transceivers
+SCH: R21 and R22 should be 10k, not 10 ohms (board is populated correctly)
+
+===================================
+
+ML window: 0xFC
+A[12: 2] = C = 00101000000 ; /RAS pairs, B0 unused (only 1 RAM populated)
+A[12: 2] = C = 00101100000 ; /RAS separate, B0 selects slot
+A[25:15] = R = 00111010111
+A[14:13] = B = 11
+/ECAS0 = /LLD = 0
+A[25:0] = 00 1110 1011 1110 0101 0000 0011
+A[25:0] = 00 1110 1011 1110 0101 1000 0011
+
+DRAM ctrl addr = 0xF8EBE503
+L F8EBE503 00 Z
+L F8EBE583 00 Z
+
+L.l 04000000 10345678 Z
+L.l 04000000 000000ff Z
+
+L.l 04000000 10345678 9ABCDEF0 Z
+L.l 04002000 20345678 9ABCDEF0 Z
+L.l 04004000 30345678 9ABCDEF0 Z
+L.l 04006000 40345678 9ABCDEF0 Z
+
+P.l 04000000 8
+P.l 04002000 8
+P.l 04004000 8
+P.l 04006000 8
+
+L 04000000 a5 Z
+L 04000001 a5 Z
+L 04000002 a5 Z
+L 04000003 a5 Z

@@ -13,6 +13,9 @@ void main(void) {
     uint32_t offset;
     uint8_t val;
 
+    // Initialize DRAM
+    //*((uint8_t *)0xF8EBE583) = 0;
+
     initializeSerial();
     writeStringToSerial("Init\n", 5);
     writeStringToSerial("Heap start = 0x", 15);
