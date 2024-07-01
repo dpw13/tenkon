@@ -44,7 +44,7 @@ rom.bin: main.elf
 	$(OBJCOPY) -O binary $< $@
 
 hi.bin lo.bin: swizzle.py rom.bin
-	python3 swizzle.py rom.bin
+	python3 swizzle.py 0 rom.bin
 
 newlib/newlib/build/Makefile:
 	mkdir -p newlib/newlib/build

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import argparse
 import functools
+import os
 import sys
 
 def get_bit(byte, bit) :
@@ -22,12 +24,15 @@ def swizzle_byte(byte: int):
 
     return ret_val
 
-ROM_SIZE = 0x80000
-#ROM_SIZE = 0x100
+parser = argparse.ArgumentParser()
+parser.add_argument('--rom-size', '-s', help="ROM size", type=int, default=0x80000)
+parser.add_argument('--offset', '-o', action='append', type=lambda x: int(x, 0))
+parser.add_argument('--binfile', '-f', action='append', type=str)
+args = parser.parse_args()
 
 out_bytes = [
-    bytearray([255] * ROM_SIZE),
-    bytearray([255] * ROM_SIZE),
+    bytearray([255] * args.rom_size),
+    bytearray([255] * args.rom_size),
 ]
 
 # See MC68030UM Fig 7-4
@@ -35,20 +40,18 @@ out_bytes = [
 # B0        B1
 # B2        B3
 
-if len(sys.argv) < 2:
-    print(f"Usage: {sys.argv[0]} <romfile.bin>")
-    exit(1)
-
-addr = 0
-with open(sys.argv[1], "rb") as src:
-    for chunk in iter(functools.partial(src.read, 4096), b''):
-        for b in chunk:
-            rom = addr & 0x01
-            bank = ROM_SIZE//2 if (addr & 0x02) else 0
-            offset = (addr >> 2) + bank
-            #print(f"{addr:02X} -> {rom}.{offset:02X}: {b}")
-            out_bytes[rom][offset] = swizzle_byte(b)
-            addr += 1
+for (addr, path) in zip(args.offset, args.binfile):
+    size = os.path.getsize(path)
+    print(f"Adding {path} at offset 0x{addr:x}:0x{addr+size:x}")
+    with open(path, "rb") as src:
+        for chunk in iter(functools.partial(src.read, 4096), b''):
+            for b in chunk:
+                rom = addr & 0x01
+                bank = args.rom_size//2 if (addr & 0x02) else 0
+                offset = (addr >> 2) + bank
+                #print(f"{addr:02X} -> {rom}.{offset:02X}: {b}")
+                out_bytes[rom][offset] = swizzle_byte(b)
+                addr += 1
 
 # Yes this indexing is intentional T_T
 with open("hi.bin", "wb") as out:
