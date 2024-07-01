@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "serial.h"
+#include "asm.h"
 
 inline void memWriteByte(const uint8_t b, const uintptr_t addr) {
     *(uint8_t *)addr = b;
@@ -27,7 +29,9 @@ inline uint32_t memReadLWord(const uintptr_t addr) {
    return *(uint32_t *)addr;
 }
 
-void run(const uintptr_t addr) {
+void run(const uintptr_t addr, const uint8_t debug) {
+    if (debug)
+        trace_flow();
     // Do not do this. Seriously under no circumstances
     // should you copy this code into any other program!
     // Should you decide to do so your descendants will
@@ -55,11 +59,45 @@ void loadWords(uintptr_t addr) {
 
 void loadLWords(uintptr_t addr) {
     uint32_t value = 0;
+    uint32_t sum = 0;
+    uint8_t nibble_count = 0;
+    uint32_t *buf = (uint32_t *)addr;
+    char c;
 
-    while(scanf("%08x", &value)) {
-        memWriteLWord(value, addr);
-        addr += sizeof(value);
+    /* Clear any existing serial errors */
+    serialGetError();
+
+    /* When loading long words use a faster implementation so
+     * we can keep up with line rate when transferring large
+     * applications. */
+
+    while (1) {
+        c = readSerial();
+        if (isdigit(c)) {
+            value = (value << 4) | (c - '0');
+            nibble_count++;
+        } else if (isxdigit(c)) {
+            value = (value << 4) | (0xa + c - (c >= 'a' ? 'a' : 'A'));
+            nibble_count++;
+        } else if (isspace(c)) {
+            if (nibble_count > 0) {
+                /* If we've recorded any data at all, write to memory
+                 * Note that we don't validate that we got 8 nibbles.
+                 */
+                *buf++ = value;
+                sum += value;
+                nibble_count = 0;
+            }
+        } else {
+            break;
+        }
     }
+
+    if ((c = serialGetError())) {
+        printf("Encountered serial error: %02x", c);
+    }
+
+    printf("Received %d bytes\n", (uintptr_t)buf - addr);
 }
 
 void showBytes(uintptr_t addr, const int size) {
@@ -277,8 +315,11 @@ void consoleLoop(void) {
                 break;
             case 'R':  //Run
             case 'r':
+                if (!scanf(".%c", &cmd)) {
+                    cmd = ' ';
+                }
                 scanf("%x", &addr);
-                run(addr);
+                run(addr, cmd == 'd');
                 break;
             case 'M': //Memtest
             case 'm':
@@ -293,6 +334,10 @@ void consoleLoop(void) {
             case 'i': //Context info
             case 'I':
                 contextInfo();
+                break;
+            case 'd': //Enable trace
+            case 'D':
+                trace_flow();
                 break;
             default:
                 printf("Unrecognized Command: %c\n", cmd);
@@ -315,10 +360,18 @@ int main(void) {
     printf("Commands:\n");
     printf("L addr      - Loads bytes represented in Hex starting at addr.\n");
     printf("              Continues to load bytes until you send Z.\n");
+    printf("  L.b addr  - Loads by byte (default).\n");
+    printf("  L.w addr  - Loads by 16-bit word.\n");
+    printf("  L.l addr  - Loads by 32-bit long word\n");
     printf("P addr size - Peeks at size bytes at addr.\n");
+    printf("  P.b a s   - Peeks by byte (default).\n");
+    printf("  P.w a s   - Peeks by 16-bit word.\n");
+    printf("  P.l a s   - Peeks by 32-bit long word\n");
     printf("R addr      - Calls subroutine located at addr\n");
+    printf("  R.d addr  - Enables control flow tracing before calling subroutine\n");
     printf("M addr size - Test size bytes of memory starting at addr\n");
     printf("I           - Print info about the current execution context\n");
+    printf("D           - Trace control flow\n");
     consoleLoop();
     return 0;
 }
