@@ -36,10 +36,10 @@ STERM.T = D6 + D7
 ;
 ; For the next revision we should determine how to reliably drive these open-drain
 ; signals high before tristating them, ensuring maximum utilization of the bus.
-DSACK0.T = CSPS2 * DELAYPS2
-         + CSDUART * DELAYSERIAL
-         + CSTERMINAL * DELAYSERIAL
-         + CSRTC * DELAYRTC
+DSACK0.T = DS * CSPS2 * DELAYPS2
+         + DS * CSDUART * DELAYSERIAL
+         + DS * CSTERMINAL * DELAYSERIAL
+         + DS * CSRTC * DELAYRTC
 
 DSACKFB = CSPS2 + DELAYPS2
           + CSDUART + DELAYSERIAL
