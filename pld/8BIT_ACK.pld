@@ -1,0 +1,48 @@
+GAL22V10
+8BIT_ACK
+
+; Name     8BIT_ACK_LOGIC ;
+; PartNo   00 ;
+; Date     3/24/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+/DS          /CSPS2       /CSDUART     /CSTERMINAL /CSRTC      /RESET       DELAYRTC     DELAYSERIAL  DELAYPS2    D6           D7           GND
+/INTVECEN    NC           NC           /RESETK     RESETT      RESETD       /STERM       /DSACK0      NC          DSACKFB      NOTDS        VCC
+
+; RESET Signal Multicast
+
+RESETD = RESET
+RESETT = RESET
+RESETK = RESET
+
+; Invert DS
+NOTDS = DS
+
+; STERM logic
+STERM.T = D6 + D7
+/STERM.E = INTVECEN
+
+; ACK logic: This configuration causes the enable pin to assert for very slightly
+; longer than data (.T). That means that when the processor sees DSACK assert, CS
+; deasserts and we *very* briefly drive a 1 on /DSACK. This helps drive /DSACK back
+; to 1 faster than the pullup on the backplane can realistically pull it, ensuring
+; that /DSACK returns to a high logic level before it interferes with a subsequent
+; access.
+;
+; For the next revision we should determine how to reliably drive these open-drain
+; signals high before tristating them, ensuring maximum utilization of the bus.
+DSACK0.T = CSPS2 * DELAYPS2
+         + CSDUART * DELAYSERIAL
+         + CSTERMINAL * DELAYSERIAL
+         + CSRTC * DELAYRTC
+
+DSACKFB = CSPS2 + DELAYPS2
+          + CSDUART + DELAYSERIAL
+          + CSTERMINAL
+          + CSRTC + DELAYRTC
+/DSACK0.E = DSACKFB
