@@ -103,7 +103,7 @@ _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 	//writeSerial('\n');
 
 	for (; len > 0; --len) {
-		readSerial(buf);
+		*buf = readSerial();
 		read++;
 		/* echo */
 		writeSerial(*buf);
@@ -113,8 +113,11 @@ _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 			break;
 		}
 		if (*buf == '\b' || *buf == 127) {
-			/* model backspace */
-			*--buf = 0;
+			if ((void *)buf > ptr) {
+				/* model backspace */
+				*--buf = 0;
+				read =- 2;
+			}
 		} else {
 			buf++;
 		}

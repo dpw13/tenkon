@@ -29,7 +29,7 @@ void forceWriteSerial(const char c) {
 
 void writeSerial(const char c) {
     // Busy wait until ready...probably not the best
-    while( !(term_regs->A.SR & 0x04) ) {}
+    while( !(term_regs->A.SR & SR_TXRDY) ) {}
     term_regs->A.TxFIFO = c;
 }
 
@@ -37,20 +37,26 @@ void writeStringToSerial(const char *buffer, const int length) {
     const char *p = buffer;
     for(int i = 0; i < length; i++) {
         // Manually inline for efficiency
-        while( !(term_regs->A.SR & 0x04) ) {}
+        while( !(term_regs->A.SR & SR_TXRDY) ) {}
         term_regs->A.TxFIFO = *p++;
     }
 }
 
-void readSerial(char *c) {
-    while( !(term_regs->A.SR & 0x01) ) {}
-    *c = term_regs->A.RxFIFO;
-    return;
+unsigned char serialGetError(void) {
+    uint8_t ret = term_regs->A.SR & SR_ERR_MASK;
+    // Clear errors
+    term_regs->A.CR = CR_CMD_RESET_ERR;
+    return ret;
+}
+
+char readSerial(void) {
+    while( !(term_regs->A.SR & SR_RXRDY) ) {}
+    return term_regs->A.RxFIFO;
 }
 
 int readFromSerial(char *buffer, const int size) {
     for(int i = 0; i < size; i++) {
-        if( !(term_regs->A.SR & 0x01) ) {
+        if( !(term_regs->A.SR & SR_RXRDY) ) {
             return i;
         }
         buffer[i] = term_regs->A.RxFIFO;

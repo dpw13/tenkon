@@ -10,7 +10,8 @@ void initializeSerial();
 void forceWriteSerial(const char c);
 void writeSerial(const char c);
 void writeStringToSerial(const char *buffer, const int length);
-void readSerial(char *c);
+char readSerial(void);
 int readFromSerial(char *buffer, const int size);
+unsigned char serialGetError(void);
 
 #endif //SERIAL_H

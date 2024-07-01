@@ -55,11 +55,22 @@ typedef struct {
     };
 } duart_regs_t;
 
+#define SR_RXRDY          (1 << 0)
+#define SR_RXFULL         (1 << 1)
+#define SR_TXRDY          (1 << 2)
+#define SR_TXEMPTY        (1 << 3)
+#define SR_ERR_RX_OVERRUN (1 << 4)
+#define SR_ERR_PARITY     (1 << 5)
+#define SR_ERR_FRAMING    (1 << 6)
+#define SR_RX_BREAK       (1 << 7)
+
+#define SR_ERR_MASK       (7 << 4)
+
 #define CR_CMD_NONE      (0x0 << 4)
 #define CR_CMD_RESET_MR1 (0x1 << 4) // "set pointer" sets to MR1
 #define CR_CMD_RESET_RX  (0x2 << 4)
 #define CR_CMD_RESET_TX  (0x3 << 4)
-#define CR_CMD_RESET_ERR (0x3 << 4)
+#define CR_CMD_RESET_ERR (0x4 << 4)
 #define CR_CMD_RESET_MR0 (0xB << 4)
 
 #define CR_ENA_RX (1 << 0)
