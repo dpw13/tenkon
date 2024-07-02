@@ -34,7 +34,7 @@ const char *EXCEPTION_NAMES[] = {
 INIT_VEC __DefaultInterrupt(void) {
     uint16_t* fp = __builtin_frame_address(0) + 4;
     uint16_t* pc;
-    void *stackPtr;
+    uint16_t* stackPtr;
     uint32_t tmp;
     uint8_t vec_idx;
     uint8_t frame_type;
@@ -71,7 +71,7 @@ INIT_VEC __DefaultInterrupt(void) {
     if (vec_idx < sizeof(EXCEPTION_NAMES)/sizeof(char *)) {
         writeStringToSerial(EXCEPTION_NAMES[vec_idx], strlen(EXCEPTION_NAMES[vec_idx]));
     } else {
-        writeStringToSerial("unknown", 8);
+        writeStringToSerial("unknown", 7);
     }
     writeSerial('\n');
 
@@ -80,11 +80,19 @@ INIT_VEC __DefaultInterrupt(void) {
     writeStringToSerial("\nSP: ", 5);
     printU32((uintptr_t)stackPtr);
 
-    writeStringToSerial("\n\nStack:\n", 9);
+    writeStringToSerial("\n\nException frame:\n", 19);
     for (uint8_t word = 0; word < frame_size; word++) {
-        printU8(word);
+        printU32((uintptr_t)&fp[word]);
         writeStringToSerial(": ", 3);
         printU16(fp[word]);
+        writeSerial('\n');
+    }
+
+    writeStringToSerial("\n\nStack:\n", 9);
+    for (uint8_t word = 0; word < frame_size; word++) {
+        printU32((uintptr_t)&stackPtr[word]);
+        writeStringToSerial(": ", 3);
+        printU16(stackPtr[word]);
         writeSerial('\n');
     }
 
@@ -116,7 +124,7 @@ INIT_VEC __DefaultInterrupt(void) {
 INIT_VEC Trace(void) {
     uint16_t* fp = __builtin_frame_address(0) + 4;
     uint16_t* pc;
-    void *stackPtr;
+    uint16_t *stackPtr;
     uint8_t frame_type;
     uint8_t frame_size; // size in 16-bit words
 
@@ -149,11 +157,19 @@ INIT_VEC Trace(void) {
     writeStringToSerial("\nSP: ", 5);
     printU32((uintptr_t)stackPtr);
 
-    writeStringToSerial("\n\nStack:\n", 9);
+    writeStringToSerial("\n\nException frame:\n", 19);
     for (uint8_t word = 0; word < frame_size; word++) {
-        printU8(word);
+        printU32((uintptr_t)&fp[word]);
         writeStringToSerial(": ", 3);
         printU16(fp[word]);
+        writeSerial('\n');
+    }
+
+    writeStringToSerial("\n\nStack:\n", 9);
+    for (uint8_t word = 0; word < frame_size; word++) {
+        printU32((uintptr_t)&stackPtr[word]);
+        writeStringToSerial(": ", 3);
+        printU16(stackPtr[word]);
         writeSerial('\n');
     }
 
