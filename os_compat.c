@@ -95,20 +95,20 @@ _open_r(struct _reent *reent, const char *file, int flags, int mode)
 _ssize_t
 _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 {
-	int read = 0;
 	char *buf = (char *)ptr;
-
-	//writeStringToSerial("! read <- 0x", 13);
-	//printU32(len);
-	//writeSerial('\n');
 
 	for (; len > 0; --len) {
 		*buf = readSerial();
-		read++;
-		/* echo */
-		writeSerial(*buf);
-		/* Exit on linebreak. Recommended terminal settings are that
-		 * <enter> sends CRLF and to add an implicit CR to all LF */
+
+		/* Terminal by default sends only CR; convert that to CRLF */
+		if (*buf == '\r') {
+			*++buf = '\n';
+			writeSerial('\n');
+		} else {
+			writeSerial(*buf);
+		}
+
+		/* Exit on linebreak. */
 		if (*buf == '\n') {
 			break;
 		}
@@ -116,16 +116,13 @@ _read_r(struct _reent *reent, int file, void *ptr, size_t len)
 			if ((void *)buf > ptr) {
 				/* model backspace */
 				*--buf = 0;
-				read =- 2;
 			}
 		} else {
 			buf++;
 		}
 	}
-	//writeStringToSerial("! read -> 0x", 13);
-	//printU32(len);
-	//writeSerial('\n');
-	return read;
+
+	return ((uintptr_t)buf - (uintptr_t)ptr);
 }
 
 int
@@ -135,29 +132,19 @@ _readlink_r(struct _reent *reent, const char *path, char *buf, size_t bufsize)
 	return -1;
 }
 
+extern int _heap_start;
+extern int _heap_end;
+
 void *_sbrk_r (struct _reent *reent, ptrdiff_t incr) {
-	extern int _heap_start;
-	extern int _heap_end;
+	static uintptr_t heap_end = (uintptr_t)&_heap_start;
+	uintptr_t next_heap_end = heap_end + incr;
 
-	static int *heap_end = NULL;
-	int *prev_heap_end;
-
-	//writeStringToSerial("\n! sbrk 0x", 10);
-	//printU32(incr);
-	//writeSerial('\n');
-
-	if (heap_end == NULL) {
-		heap_end = &_heap_start;
-	}
-
-	prev_heap_end = heap_end;
-	heap_end += incr;
-
-	if(heap_end >= &_heap_end) {
+	if(next_heap_end >= (uintptr_t)&_heap_end) {
 		reent->_errno = ENOMEM;
 		return (void *)-1;
 	}
-	return (void *) prev_heap_end;
+	heap_end = next_heap_end;
+	return (void *) heap_end;
 }
 
 int
