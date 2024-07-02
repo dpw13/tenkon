@@ -3,9 +3,12 @@ MACHINE=68030
 LIBC_INC=-Inewlib/newlib/libc/include -Inewlib/newlib/build/targ-include
 LIBC=newlib/newlib/build/libc.a
 
-OPT=-Os -finline-limit=1000
+OPT=-Os
+MIND_CFLAGS=-finline-limit=1000 -fdata-sections -ffunction-sections
+# Omit -msep-data as it produces a global offset table that takes up additional SRAM
+M68K_CFLAGS=-m${MACHINE} -msoft-float
 
-CFLAGS=-g -Wall $(OPT) -std=gnu99 -fdata-sections -ffunction-sections -fomit-frame-pointer -m${MACHINE} -msoft-float $(LIBC_INC)
+CFLAGS=-g -Wall -Wno-char-subscripts $(OPT) $(MIND_CFLAGS) $(M68K_CFLAGS) -std=gnu99 $(LIBC_INC)
 CXXFLAGS=$(CFLAGS) -nostdinc++ -fno-rtti -fno-exceptions
 LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -Wl,--discard-locals -m68030 -Wl,--script=build/m${MACHINE}.ld
 PREFIX=m68k-linux-gnu
@@ -38,13 +41,13 @@ all: hi.bin lo.bin
 
 # Putting crt0.o first makes the objdump disasm clearer
 main.elf: crt0_mem.o exceptions.o console.o print_utils.o serial.o $(LIBC) os_compat.o
-	$(LD) -o $@ $^ $(LDFLAGS)
+	$(LD) -o $@ $^ $(LDFLAGS) -Wl,-Map=main.map
 
 rom.bin: main.elf
 	$(OBJCOPY) -O binary $< $@
 
 hi.bin lo.bin: swizzle.py rom.bin
-	python3 swizzle.py 0 rom.bin
+	python3 swizzle.py -o 0 -f rom.bin
 
 newlib/newlib/build/Makefile:
 	mkdir -p newlib/newlib/build
