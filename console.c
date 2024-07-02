@@ -251,6 +251,20 @@ void contextInfo(void) {
     printf("Stack: %p:%p\n", &_stack_start, &_stack_end);
 }
 
+static inline void initDRAM(void) {
+    /* Configure DRAM */
+    *(uint8_t *)0xF8EBE583 = 0;
+	/* Delay. Must be at least 60 ms */
+	for (uint32_t i = 0; i < 100000; i++)
+		asm("nop");
+}
+
+void runUboot(void) {
+    /* U-boot runs from SRAM and does its own RAM init */
+    /* Jump to u-boot entry */
+    run(0xFFF08400, 0);
+}
+
 void consoleLoop(void) {
     char cmd;
     uintptr_t addr = 0;
@@ -339,6 +353,10 @@ void consoleLoop(void) {
             case 'D':
                 trace_flow();
                 break;
+            case 'u':
+            case 'U':
+                runUboot();
+                break;
             default:
                 printf("Unrecognized Command: %c\n", cmd);
                 break;
@@ -372,6 +390,7 @@ int main(void) {
     printf("M addr size - Test size bytes of memory starting at addr\n");
     printf("I           - Print info about the current execution context\n");
     printf("D           - Trace control flow\n");
+    printf("U           - Initialize DRAM and run u-boot\n");
     consoleLoop();
     return 0;
 }
