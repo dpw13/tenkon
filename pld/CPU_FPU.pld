@@ -12,21 +12,21 @@ CPU_FPU
 ; Device   p22v10 ;
 
 SYS_CLK    FC0        FC1        FC2        A19        A18        A17        A16        A15        A14        A13        GND
-NC         NC         CLK_BUS    CLK_CPU    CLK_CO     /BERR      /FPU_CS    /CPU_SPACE NC         CLK_DIV    /FPU_SENSE VCC
+NC         NC         CLK_BUS    CLK_CPU    CLK_CO     /BERR      /FPU_CS    /IRQ_CS    NC         CLK_DIV    /FPU_SENSE VCC
 
-/* CLOCK BUFFERS */
+; CLOCK BUFFERS
 CLK_DIV = SYS_CLK;
 CLK_CPU = SYS_CLK;
 CLK_CO  = SYS_CLK;
 CLK_BUS = SYS_CLK;
 
-CPU_SPACE = FC2 * FC1 * FC0 ;
+;       |   CPU SPACE   | |      IRQ CODE       |
+IRQ_CS = FC2 * FC1 * FC0 * A19 * A18 * A17 * A16;
 
-/* Probably needs AS, but can try without it */
+;       |   CPU SPACE   | |       COPROC CODE      | |      CPID       |
 FPU_CS = FC2 * FC1 * FC0 * /A19 * /A18 * A17 * /A16 * /A15 * /A14 * A13 * FPU_SENSE;
 
-/* BERR is open drain from multiple sources */
-BERR = VCC;
-/* We could assert BERR when accessing CPU_SPACE but the watchdog will take care of it. */
-BERR.OE = GND;
-
+; BERR is open drain from multiple sources
+BERR.T = VCC;
+; We could assert BERR when accessing CPU_SPACE but the watchdog will take care of it.
+/BERR.E = GND;

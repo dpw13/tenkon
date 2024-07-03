@@ -5,6 +5,8 @@ ROM DQ[7:3] reversed when connecting to D[23:19] (currently connected to D[19:23
 Recommend routing /DBERR and /STATUS to jumper pins for easier debugging
 * DIR is CORRECT polarity on data transceivers
 Data transceivers /OE should be driven from PLD logic, not just BG
+    * needs inputs from top address lines for data window plus FC and A16:19 for irq ack bus cycle
+    * rename /CPU_SPACE to /IRQ_VEC_CS or something and connect U1.20 to address decoder U7.
 
 IO Board:
 Data buffer ~OE control should be AND of all CS signals on the board
@@ -12,6 +14,13 @@ Data buffer ~OE control should be AND of all CS signals on the board
 XXX Data buffer DIR polarity is wrong - I was wrong about being wrong, R!W is correct!
     U16.1 to U10.23
 DIR is wrong polarity on data transceivers
+/INTVEC_Vx shouldn't be active low on the schematic as they're never inverted
+It would be nice to control /1G and /2G on the IRQ decoder U11 from the IRQ logic PLD U15 using pin 23
+    It would simplify the logic in some irq configurations I think and might make it easier to understand
+The IRQ signal names aren't all accurate on the schematic 
+    It looks like the DUARTs have an active low IRQ so these need to be barred on the schematic
+    The RTC can be configured as high or low, so let's stick with active low
+    The VC82C42 refers to pins 34 and 35 as P24 and P25 but these are both active high
 
 DRAM board:
 SIMM banks should be connected something like this for rank 2 SIMMs and remove J2:
