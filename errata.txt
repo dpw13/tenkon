@@ -19,8 +19,9 @@ It would be nice to control /1G and /2G on the IRQ decoder U11 from the IRQ logi
     It would simplify the logic in some irq configurations I think and might make it easier to understand
 The IRQ signal names aren't all accurate on the schematic 
     It looks like the DUARTs have an active low IRQ so these need to be barred on the schematic
-    The RTC can be configured as high or low, so let's stick with active low
+    The RTC can be configured as high or low but defaults to high
     The VC82C42 refers to pins 34 and 35 as P24 and P25 but these are both active high
+DUART IRQs both require pullups
 
 DRAM board:
 SIMM banks should be connected something like this for rank 2 SIMMs and remove J2:
@@ -88,3 +89,13 @@ L.l 04000000
 
 L F8EBE583 00 Z
 R fff08400
+
+S 2100
+L.b fe400005 1 Z
+
+lsb first 
+0011 1001 1111 1111 1110
+0011 1111 1100 0000 0000
+
+c9ff7 (0x7ff9c, stack addr)
+cf300 (0x3fc?)

@@ -98,6 +98,28 @@ SECTIONS {
  *   . = 0x140;
  *   LONG(ABSOLUTE(NameOfHandlerFunction));
  */
+        . = 0x300;
+        /* Set default interrupt for all 8-bit board interrupts */
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+        LONG(ABSOLUTE(__DefaultInterrupt));
+
+        . = 0x3fc;
+        LONG(ABSOLUTE(__DefaultInterrupt));
+
         . = 0x400;
         _evt_end = .;
     } > rom

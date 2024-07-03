@@ -23,12 +23,13 @@ RESETK = RESET
 ; Invert DS
 NOTDS = DS
 
-; STERM logic
-STERM.T = D6 + D7
+; STERM logic: interrupt vector accesses are considered full-width since we
+; put the data on D7-0, so respond with STERM.
+STERM.T = DELAYSERIAL * DS
 /STERM.E = INTVECEN
 
 ; ACK logic: This configuration causes the enable pin to assert for very slightly
-; longer than data (.T). That means that when the processor sees DSACK assert, CS
+; longer than data (.T). That means that when the processor sees DSACK assert, DS
 ; deasserts and we *very* briefly drive a 1 on /DSACK. This helps drive /DSACK back
 ; to 1 faster than the pullup on the backplane can realistically pull it, ensuring
 ; that /DSACK returns to a high logic level before it interferes with a subsequent

@@ -23,9 +23,9 @@ _start:
 
         /* Copy event table to RAM */
 Levt_table:
-        movea.l #_evt_start, %a0       /* Source address */
+        movea.l #_evt_start, %a0        /* Source address */
         movea.l #0, %a1                 /* Destination start address */
-        movea.l #400, %a2               /* Destination end address */
+        movea.l #0x400, %a2             /* Destination end address */
 Levt_loop:
         cmpa.l  %a2, %a1                /* Check if start < end */
         bge     Lbss_init

@@ -268,7 +268,8 @@ void runUboot(void) {
 void consoleLoop(void) {
     char cmd;
     uintptr_t addr = 0;
-    int size = 0;
+    uint32_t size = 0;
+    uint16_t word = 0;
     int line = 0;
 
     while(1) {  //run forever
@@ -345,6 +346,11 @@ void consoleLoop(void) {
                 scanf("%d", &size);
                 memTest(addr, size, cmd);
                 break;
+            case 's': //Set status register
+            case 'S':
+                scanf("%hx", &word);
+                set_status(word);
+                break;
             case 'i': //Context info
             case 'I':
                 contextInfo();
@@ -388,6 +394,7 @@ int main(void) {
     printf("R addr      - Calls subroutine located at addr\n");
     printf("  R.d addr  - Enables control flow tracing before calling subroutine\n");
     printf("M addr size - Test size bytes of memory starting at addr\n");
+    printf("S value     - Set status register\n");
     printf("I           - Print info about the current execution context\n");
     printf("D           - Trace control flow\n");
     printf("U           - Initialize DRAM and run u-boot\n");

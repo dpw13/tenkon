@@ -89,7 +89,7 @@ INIT_VEC __DefaultInterrupt(void) {
     }
 
     writeStringToSerial("\n\nStack:\n", 9);
-    for (uint8_t word = 0; word < frame_size; word++) {
+    for (uint8_t word = 0; word < 8; word++) {
         printU32((uintptr_t)&stackPtr[word]);
         writeStringToSerial(": ", 3);
         printU16(stackPtr[word]);
@@ -166,7 +166,7 @@ INIT_VEC Trace(void) {
     }
 
     writeStringToSerial("\n\nStack:\n", 9);
-    for (uint8_t word = 0; word < frame_size; word++) {
+    for (uint8_t word = 0; word < 8; word++) {
         printU32((uintptr_t)&stackPtr[word]);
         writeStringToSerial(": ", 3);
         printU16(stackPtr[word]);
