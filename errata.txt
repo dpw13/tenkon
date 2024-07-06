@@ -32,6 +32,26 @@ SIMM banks should be connected something like this for rank 2 SIMMs and remove J
 Add jumper to enable RAS1, RAS3 and/or drive DP8422V B[1:0] from PLD
 Suggest handling /CBREQ and /CBACK in CS PLD for burst accesses and drive /COLINC from same PLD
 
+Video/16-bit board:
+/OE on data transceivers is undriven. Route /OE to chip select logic PLD U6.23
+RTL8019AS IOCS16B needs to be connected to 16-bit enable SIZ bit active low (SIZ0)
+    x U5.14 to R12
+It would be better to support single-byte accesses in addition to 2-byte accesses on this board,
+    which means adding SIZ0 and SIZ1 to U10 (ACK logic). Some drivers expect to be able to make
+    8-bit accesses.
+    x U5.14 and U5.13 to U10.6 and U10.7 respectively
+    * U10.20 (new /B_DSACK0) to BIGCON1.25
+    It's not clear whether this is actually needed or if all 16-bit accesses are treated as 8-bit accesses internally
+Address /OE isn't driven. Tie to ground or use 74F245s to support DMA mastering if the RTL8019AS is capable
+
+Nice to haves:
+    /CSIO from U6 to U10 to qualify /DSACK
+    BUS_CLK on U10.1 for /STERM generation
+    Drive INTVEC_V1 and V2 from U12 in addition to just V0
+
+TODO:
+Wish list of test pins for each board for debug headers
+
 Rework:
 cut U1.34, /RAS2_SLOTA
 cut U1.45, /RAS1 (R13)

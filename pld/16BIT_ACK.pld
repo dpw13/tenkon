@@ -1,0 +1,47 @@
+GAL22V10
+16BIT_ACK
+
+; Name     16BIT_ACK ;
+; PartNo   00 ;
+; Date     3/24/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+NC    /VID_WAIT    ETH_RDY      IDE_RDY     RnW   SIZ0      SIZ1       /RESET     B_D6      B_D7    /INTVEC_EN   GND
+NC    ETH_RESET    NC           /WR         /RD   /B_STERM  /B_DSACK1  /B_DSACK0  DSACK_FB  NC      NC           VCC
+
+; RESET Signal Multicast
+ETH_RESET = RESET
+
+; Read/Write enables
+RD = RnW
+WR = /RnW
+
+; STERM logic: interrupt vector accesses are considered full-width since we
+; put the data on D7-0, so respond with STERM.
+; TODO: This may need to be registered by BUSCLK to provide some delay
+B_STERM.T = GND
+/B_STERM.E = INTVEC_EN
+
+; ACK logic: This configuration causes the enable pin to assert for very slightly
+; longer than data (.T). That means that when the processor sees DSACK assert, DS
+; deasserts and we *very* briefly drive a 1 on /DSACK. This helps drive /DSACK back
+; to 1 faster than the pullup on the backplane can realistically pull it, ensuring
+; that /DSACK returns to a high logic level before it interferes with a subsequent
+; access.
+;
+; For the next revision we should determine how to reliably drive these open-drain
+; signals high before tristating them, ensuring maximum utilization of the bus.
+
+; We don't have /CS signals here to qualify the ready signals or even /AS
+B_DSACK0.T = SIZ0 * /VID_WAIT * ETH_RDY * IDE_RDY
+B_DSACK1.T = SIZ1 * /VID_WAIT * ETH_RDY * IDE_RDY
+
+DSACK_FB = /VID_WAIT * ETH_RDY * IDE_RDY
+
+/B_DSACK0.E = /DSACK_FB
+/B_DSACK1.E = /DSACK_FB

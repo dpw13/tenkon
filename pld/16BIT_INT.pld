@@ -1,0 +1,42 @@
+GAL22V10
+16BIT_INT
+
+; Name     16BIT_INT ;
+; PartNo   00 ;
+; Date     2/2/2023 ;
+; Revision 01 ;
+; Designer Engineer ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+; Note that the keyboard and mouse IRQs are active high while the DUART and RTC IRQs are active low
+
+NC    A1     A2     A3     RnW          /IRQ_VEC_CS  /IPEND      /AS       ETH_IRQ  IDE_IRQ   NC  GND
+NC    INT0   INT1   INT2   /B_IPEND_O   /INTVEC_EN   INTVEC_V0   /B_AVEC   NC       NC        NC  VCC
+
+; For now we only use a single card-global IRQ line (2, below the 8-bit bus) and different
+; vectors for each device that can request an IRQ.
+
+; Really this is a single IRQ line that is the OR of all incoming interrupts mapped
+; to our single global IRQ (2)
+INT2 = VCC ; INT2 (C on 74LS156) VCC selects 1Yx (low IRQs), GND selects 2Yx (high IRQs) 
+INT1 = ETH_IRQ + IDE_IRQ
+INT0 = GND
+
+; Do not gate downstream IPEND
+B_IPEND_O = IPEND
+
+; We do not drive /AVEC
+B_AVEC.T = GND
+/B_AVEC.E = GND
+
+; Instead, respond to interrupt vector request if the request is for our global IRQ
+INTVEC_EN = AS * RnW * IRQ_VEC_CS * /A3 * A2 * /A1
+
+; Decode IRQ vector based on priority. From highest to lowest:
+; ETH_IRQ      001
+; IDE_IRQ      000
+
+INTVEC_V0 = ETH_IRQ

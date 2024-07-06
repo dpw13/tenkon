@@ -14,7 +14,7 @@ GAL22V10
 ; Note that the keyboard and mouse IRQs are active high while the DUART and RTC IRQs are active low
 
 RTC_IRQ      A1           A2           A3           MOUSE_IRQ    KEYB_IRQ   /IPEND       /AS          /DUART_IRQ   /TERM_IRQ   /IRQ_VEC_CS  GND
-RD           /B_IPEND_O   /B_AVEC      INT0         INT1         INT2       INTVEC_V2    INTVEC_V1    INTVEC_V0    /INTVEC_EN  NC           VCC
+RnW          /B_IPEND_O   /B_AVEC      INT0         INT1         INT2       INTVEC_V2    INTVEC_V1    INTVEC_V0    /INTVEC_EN  NC           VCC
 
 ; For now we only use a single global IRQ line (3, in the middle) and different
 ; vectors for each device that can request an IRQ.
@@ -33,7 +33,7 @@ B_AVEC.T = GND
 /B_AVEC.E = GND
 
 ; Instead, respond to interrupt vector request if the request is for our global IRQ
-INTVEC_EN = AS * RD * IRQ_VEC_CS * /A3 * A2 * A1
+INTVEC_EN = AS * RnW * IRQ_VEC_CS * /A3 * A2 * A1
 
 ; Decode IRQ vector based on priority. From highest to lowest:
 ; /RTC_IRQ      7 (111) Vector 0xC7 - note all user interrupt vectors must be > 0x40
