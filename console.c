@@ -375,6 +375,11 @@ void consoleLoop(void) {
             case 'U':
                 runUboot();
                 break;
+            case 'x':
+            case 'X':
+                scanf("%x", &addr);
+                s1d13506_init((uint8_t *)addr);
+                break;
             default:
                 printf("Unrecognized Command: %c\n", cmd);
                 break;

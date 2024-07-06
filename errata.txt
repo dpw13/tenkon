@@ -43,11 +43,14 @@ It would be better to support single-byte accesses in addition to 2-byte accesse
     * U10.20 (new /B_DSACK0) to BIGCON1.25
     It's not clear whether this is actually needed or if all 16-bit accesses are treated as 8-bit accesses internally
 Address /OE isn't driven. Tie to ground or use 74F245s to support DMA mastering if the RTL8019AS is capable
+DIR is wrong polarity on data transceivers
+I *think* BUSCLK on the video chip should be the actual BUSCLK instead of a separate clock
 
 Nice to haves:
     /CSIO from U6 to U10 to qualify /DSACK
     BUS_CLK on U10.1 for /STERM generation
     Drive INTVEC_V1 and V2 from U12 in addition to just V0
+    Note that support for this chip was added to Linux in 3.15
 
 TODO:
 Wish list of test pins for each board for debug headers

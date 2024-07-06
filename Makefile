@@ -40,7 +40,7 @@ NEWLIB_CFLAGS= \
 all: hi.bin lo.bin
 
 # Putting crt0.o first makes the objdump disasm clearer
-main.elf: crt0_mem.o exceptions.o console.o print_utils.o serial.o $(LIBC) os_compat.o
+main.elf: crt0_mem.o exceptions.o console.o print_utils.o serial.o s1d13506_init.o $(LIBC) os_compat.o
 	$(LD) -o $@ $^ $(LDFLAGS) -Wl,-Map=main.map
 
 rom.bin: main.elf
