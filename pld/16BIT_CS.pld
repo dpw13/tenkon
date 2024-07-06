@@ -11,8 +11,8 @@ GAL22V10
 ; Location  ;
 ; Device    p22v10;
 
-A21        A22        A23        A28        A29        A30        A31        A24        A25        A26        A27       GND
-/AS        /CPUSPACE  /B_CIIN    NC         /CS_IDE1   /CS_IDE0   /CS_R      /CS_VID    /CS_ETHER  NC         /CSIO     VCC
+A21        A22        A23        A24        A25        A26        A27        A28        A29        A30        A31       GND
+/AS        /CPUSPACE  /B_CIIN    NC         /CS_IDE1   /CS_IDE0   VID_MEM_EN /CS_VID    /CS_ETHER  NC         /CSIO     VCC
 
 ; 0xFD00_0000
 CSIO = A31 * A30 * A29 * A28 * A27 * A26 * /A25 * A24 * /CPUSPACE * AS
@@ -24,9 +24,9 @@ CSIO = A31 * A30 * A29 * A28 * A27 * A26 * /A25 * A24 * /CPUSPACE * AS
 CS_IDE0  = CSIO * /A23 * /A22 * /A21
 ; 0xFD20_0000
 CS_IDE1  = CSIO * /A23 * /A22 *  A21
-; 0xFD40_0000
-CS_R     = CSIO * /A23 *  A22 * /A21
+; 0xFD40_0000, includes video memory range
+CS_VID   = CSIO * /A23 *  A22
 ; 0xFD60_0000
-CS_VID   = CSIO * /A23 *  A22 *  A21
+VID_MEM_EN = CSIO * /A23 *  A22 * A21
 ; 0xFD80_0000
 CS_ETHER = CSIO *  A23 * /A22 * /A21

@@ -21,7 +21,7 @@ NC    INT0   INT1   INT2   /B_IPEND_O   /INTVEC_EN   INTVEC_V0   /B_AVEC   NC   
 
 ; Really this is a single IRQ line that is the OR of all incoming interrupts mapped
 ; to our single global IRQ (2)
-INT2 = VCC ; INT2 (C on 74LS156) VCC selects 1Yx (low IRQs), GND selects 2Yx (high IRQs) 
+INT2 = VCC ; INT2 (C on 74LS156) VCC selects 1Yx (low IRQs), GND selects 2Yx (high IRQs)
 INT1 = ETH_IRQ + IDE_IRQ
 INT0 = GND
 

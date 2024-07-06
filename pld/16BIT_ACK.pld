@@ -11,7 +11,7 @@ GAL22V10
 ; Location  ;
 ; Device   p22v10 ;
 
-NC    /VID_WAIT    ETH_RDY      IDE_RDY     RnW   SIZ0      SIZ1       /RESET     B_D6      B_D7    /INTVEC_EN   GND
+NC    /VID_RDY     ETH_RDY      IDE_RDY     RnW   SIZ0      SIZ1       /RESET     B_D6      B_D7    /INTVEC_EN   GND
 NC    ETH_RESET    NC           /WR         /RD   /B_STERM  /B_DSACK1  /B_DSACK0  DSACK_FB  NC      NC           VCC
 
 ; RESET Signal Multicast
@@ -38,10 +38,14 @@ B_STERM.T = GND
 ; signals high before tristating them, ensuring maximum utilization of the bus.
 
 ; We don't have /CS signals here to qualify the ready signals or even /AS
-B_DSACK0.T = SIZ0 * /VID_WAIT * ETH_RDY * IDE_RDY
-B_DSACK1.T = SIZ1 * /VID_WAIT * ETH_RDY * IDE_RDY
+B_DSACK0.T = SIZ0 * VID_RDY
+           ;+ SIZ0 * ETH_RDY
+           ;+ SIZ0 * IDE_RDY
+B_DSACK1.T = SIZ1 * VID_RDY
+           ;+ SIZ1 * ETH_RDY
+           ;+ SIZ1 * IDE_RDY
 
-DSACK_FB = /VID_WAIT * ETH_RDY * IDE_RDY
+DSACK_FB = VID_RDY ; + ETH_RDY + IDE_RDY
 
-/B_DSACK0.E = /DSACK_FB
-/B_DSACK1.E = /DSACK_FB
+/B_DSACK0.E = DSACK_FB
+/B_DSACK1.E = DSACK_FB
