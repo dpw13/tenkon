@@ -100,46 +100,58 @@ void loadLWords(uintptr_t addr) {
     printf("Received %d bytes\n", (uintptr_t)buf - addr);
 }
 
-void showBytes(uintptr_t addr, const int size) {
+void showBytes(const uintptr_t addr, const int size) {
     const uintptr_t target = addr + size;
+    uintptr_t ptr = addr & ~0 << 4;
 
     printf("         | 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15\n");
-    addr &= ~0 << 4;
-    while(addr < target) {
-        printf("%08x | ", addr);
+    while(ptr < target) {
+        printf("%08x | ", ptr);
         for(int j = 0; j < 16; j++) {
-            printf("%02hhx ", memReadByte(addr));
-            addr += sizeof(uint8_t);
+            if (ptr >= addr && ptr < target) {
+                printf("%02hhx ", memReadByte(ptr));
+            } else {
+                printf("   ");
+            }
+            ptr += sizeof(uint8_t);
         }
         printf("\n");
     }
 }
 
-void showWords(uintptr_t addr, const int size) {
+void showWords(const uintptr_t addr, const int size) {
     const uintptr_t target = addr + size;
+    uintptr_t ptr = addr & ~0 << 4;
 
     printf("         | 00   02   04   06   08   10   12   14\n");
-    addr &= ~0 << 4;
-    while(addr < target) {
-        printf("%08x | ", addr);
+    while(ptr < target) {
+        printf("%08x | ", ptr);
         for(int j = 0; j < 8; j++) {
-            printf("%04hx ", memReadWord(addr));
-            addr += sizeof(uint16_t);
+            if (ptr >= addr && ptr < target) {
+                printf("%04hx ", memReadWord(ptr));
+            } else {
+                printf("     ");
+            }
+            ptr += sizeof(uint16_t);
         }
         printf("\n");
     }
 }
 
-void showLWords(uintptr_t addr, const int size) {
+void showLWords(const uintptr_t addr, const int size) {
     const uintptr_t target = addr + size;
+    uintptr_t ptr = addr & ~0 << 4;
 
     printf("         | 00       04       08       12\n");
-    addr &= ~0 << 4;
     while(addr < target) {
-        printf("%08x | ", addr);
+        printf("%08x | ", ptr);
         for(int j = 0; j < 4; j++) {
-            printf("%08x ", memReadLWord(addr));
-            addr += sizeof(uint32_t);
+            if (ptr >= addr && ptr < target) {
+                printf("%08x ", memReadLWord(ptr));
+            } else {
+                printf("         ");
+            }
+            ptr += sizeof(uint32_t);
         }
         printf("\n");
     }
