@@ -48,11 +48,11 @@ void loadBytes(uintptr_t addr) {
     }
 }
 
-void loadWords(uintptr_t addr) {
+void loadWords(uintptr_t addr, const uint8_t shift) {
     uint16_t value = 0;
 
     while(scanf("%04hx", &value)) {
-        memWriteWord(value, addr);
+        memWriteWord(rol16(value, shift), addr);
         addr += sizeof(value);
     }
 }
@@ -119,7 +119,7 @@ void showBytes(const uintptr_t addr, const int size) {
     }
 }
 
-void showWords(const uintptr_t addr, const int size) {
+void showWords(const uintptr_t addr, const int size, const int shift) {
     const uintptr_t target = addr + size;
     uintptr_t ptr = addr & ~0 << 4;
 
@@ -128,7 +128,9 @@ void showWords(const uintptr_t addr, const int size) {
         printf("%08x | ", ptr);
         for(int j = 0; j < 8; j++) {
             if (ptr >= addr && ptr < target) {
-                printf("%04hx ", memReadWord(ptr));
+                uint16_t val = memReadWord(ptr);
+                val = ror16(val, shift);
+                printf("%04hx ", val);
             } else {
                 printf("     ");
             }
@@ -306,7 +308,12 @@ void consoleLoop(void) {
                         break;
                     case 'w':
                     case 'W':
-                        loadWords(addr);
+                        loadWords(addr, 0);
+                        break;
+                    case 'e':
+                    case 'E':
+                        /* Ethernet shift */
+                        loadWords(addr, 1);
                         break;
                     case 'l':
                     case 'L':
@@ -332,7 +339,12 @@ void consoleLoop(void) {
                         break;
                     case 'w':
                     case 'W':
-                        showWords(addr, size);
+                        showWords(addr, size, 0);
+                        break;
+                    case 'e':
+                    case 'E':
+                        /* Ethernet shift */
+                        showWords(addr, size, 1);
                         break;
                     case 'l':
                     case 'L':

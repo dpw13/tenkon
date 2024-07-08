@@ -13,8 +13,8 @@ GAL22V10
 
 ; Note that the keyboard and mouse IRQs are active high while the DUART and RTC IRQs are active low
 
-NC    A1     A2     A3     RnW          /IRQ_VEC_CS  /IPEND      /AS       ETH_IRQ  IDE_IRQ   NC  GND
-NC    INT0   INT1   INT2   /B_IPEND_O   /INTVEC_EN   INTVEC_V0   /B_AVEC   NC       NC        NC  VCC
+CLK_40  A1     A2     A3     RnW          /IRQ_VEC_CS  /IPEND      /AS       ETH_IRQ  IDE_IRQ   NC  GND
+NC      INT0   INT1   INT2   /B_IPEND_O   /INTVEC_EN   INTVEC_V0   /B_AVEC   NC       CLK_20    NC  VCC
 
 ; For now we only use a single card-global IRQ line (2, below the 8-bit bus) and different
 ; vectors for each device that can request an IRQ.
@@ -40,3 +40,6 @@ INTVEC_EN = AS * RnW * IRQ_VEC_CS * /A3 * A2 * /A1
 ; IDE_IRQ      000
 
 INTVEC_V0 = ETH_IRQ
+
+; TEMPORARY: register 40 MHz clock down to 20 MHz
+CLK_20.R = /CLK_20

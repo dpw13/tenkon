@@ -44,13 +44,20 @@ It would be better to support single-byte accesses in addition to 2-byte accesse
     It's not clear whether this is actually needed or if all 16-bit accesses are treated as 8-bit accesses internally
 Address /OE isn't driven. Tie to ground or use 74F245s to support DMA mastering if the RTL8019AS is capable
 DIR is wrong polarity on data transceivers
-I *think* BUSCLK on the video chip should be the actual BUSCLK instead of a separate clock
+Add BUSCLK to ACK PLD U10.1 (as CLK)
+Route /CSIO from U6 to U10 to gate ACKs and /RD,/WR
+RTL8019AS should have addresses starting at 0, not 1, even though we can access it with 16-bit accesses.
 
 Nice to haves:
     /CSIO from U6 to U10 to qualify /DSACK
     BUS_CLK on U10.1 for /STERM generation
     Drive INTVEC_V1 and V2 from U12 in addition to just V0
     Note that support for this chip was added to Linux in 3.15
+    Would be nice to have at least the RTL8019AS JP on a jumper
+    The RTL8019AS has (vendor-specific) registers all the way up to 0xFF, so it would be really nice to have 8 address lines routed
+        It would be neat (extremely low priority) to be able to mess with the PnP regs and support multiple enet devices, which would require at least 10 address lines
+    It's not required but it would be nice to have a serial eeprom to store the RTL8019AS MAC addr and config.
+        This is programmed through the enet chip so shouldn't need to be socketed
 
 TODO:
 Wish list of test pins for each board for debug headers
@@ -116,9 +123,14 @@ R fff08400
 S 2100
 L.b fe400005 1 Z
 
-lsb first 
-0011 1001 1111 1111 1110
-0011 1111 1100 0000 0000
+# Forcing 10baseT:
+l.e fd800000 e1ff z
+l.e fd800002 f0ff z
+l.e fd80000a 40ff z
 
-c9ff7 (0x7ff9c, stack addr)
-cf300 (0x3fc?)
+# print configs
+p.e fd800000 32
+
+# retry link
+l.e fd80000a 00ff z
+l.e fd800006 08ff z

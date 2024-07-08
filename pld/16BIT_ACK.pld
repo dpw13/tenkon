@@ -11,41 +11,50 @@ GAL22V10
 ; Location  ;
 ; Device   p22v10 ;
 
-NC    /VID_RDY     ETH_RDY      IDE_RDY     RnW   SIZ0      SIZ1       /RESET     B_D6      B_D7    /INTVEC_EN   GND
-NC    ETH_RESET    NC           /WR         /RD   /B_STERM  /B_DSACK1  /B_DSACK0  DSACK_FB  NC      NC           VCC
+BUSCLK  /VID_RDY     ETH_RDY      IDE_RDY     RnW   SIZ0      SIZ1       /RESET     B_D6      B_D7    /INTVEC_EN   GND
+/CSIO   ETH_RESET    NC           /WR         /RD   /B_STERM  /B_DSACK1  /B_DSACK0  CSIO_Q    /IOCS16 /INTVEC_Q    VCC
 
 ; RESET Signal Multicast
 ETH_RESET = RESET
 
-; Read/Write enables
-RD = RnW
-WR = /RnW
+; Read/Write enables. On the RTL8019AS, these are expected to meet ISA bus
+; standards, meaning they assert AFTER /AE (/CS) and only when an access
+; is occurring. To ensure that, we gate these signals with a registered
+; (delayed) CSIO. Also gate with the unregistered CSIO so the /WR signal
+; in particular does not remain asserted after /AE deasserts.
+RD = CSIO_Q * CSIO * RnW
+WR = CSIO_Q * CSIO * /RnW
+
+; IOCS16B is an active-low ISA signal that's gated by /AE (/CS). The
+; RTL8019AS expects it to be high coming out of reset to enable 16-bit
+; accesses and it should assert with or after /AE
+IOCS16 = CSIO_Q * SIZ1
 
 ; STERM logic: interrupt vector accesses are considered full-width since we
-; put the data on D7-0, so respond with STERM.
-; TODO: This may need to be registered by BUSCLK to provide some delay
-B_STERM.T = GND
-/B_STERM.E = INTVEC_EN
+; put the data on D7-0, so respond with STERM. Output /STERM = /INTVEC but
+; delay the pin enable by 1 cycle to ensure we drive one cycle of /STERM
+; asserted and one cycle deasserted.
+B_STERM.T = INTVEC_EN
+INTVEC_Q.R = INTVEC_EN
+/B_STERM.E = INTVEC_Q
 
-; ACK logic: This configuration causes the enable pin to assert for very slightly
-; longer than data (.T). That means that when the processor sees DSACK assert, DS
-; deasserts and we *very* briefly drive a 1 on /DSACK. This helps drive /DSACK back
-; to 1 faster than the pullup on the backplane can realistically pull it, ensuring
-; that /DSACK returns to a high logic level before it interferes with a subsequent
-; access.
-;
-; For the next revision we should determine how to reliably drive these open-drain
-; signals high before tristating them, ensuring maximum utilization of the bus.
+; ACK logic: On this chip we actually register CSIO on BUSCLK and drive
+; /DSACK based on that. The actual data equation is asynchronous, ensuring
+; that /DSACK asserts as quickly as possible (with at least one BUSCLK
+; cycle of delay because of the enable) while also ensuring we drive /DSACK
+; back high (deasserted) for one BUSCLK cycle before tristating the pin.
+; This precharges the /DSACK line and guarantees that the bus is immediately
+; ready for the next transaction.
 
-; We don't have /CS signals here to qualify the ready signals or even /AS
-B_DSACK0.T = SIZ0 * VID_RDY
-           ;+ SIZ0 * ETH_RDY
-           ;+ SIZ0 * IDE_RDY
-B_DSACK1.T = SIZ1 * VID_RDY
-           ;+ SIZ1 * ETH_RDY
-           ;+ SIZ1 * IDE_RDY
+; We don't have individual /CS signals here to qualify the ready signals
+; If any of the READY signals deasserts, we hold off DSACK.
+; If all the READY signals are asserted, we assert DSACK
 
-DSACK_FB = VID_RDY ; + ETH_RDY + IDE_RDY
+; WIP
+B_DSACK0.T = CSIO * SIZ0 * ETH_RDY
+B_DSACK1.T = CSIO * SIZ1 * ETH_RDY
 
-/B_DSACK0.E = DSACK_FB
-/B_DSACK1.E = DSACK_FB
+CSIO_Q.R = CSIO
+
+/B_DSACK0.E = CSIO_Q
+/B_DSACK1.E = CSIO_Q
