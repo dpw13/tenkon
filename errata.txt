@@ -134,3 +134,18 @@ p.e fd800000 32
 # retry link
 l.e fd80000a 00ff z
 l.e fd800006 08ff z
+
+# Linux:
+CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k tenkon_defconfig
+CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k -j8
+CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k INSTALL_HDR_PATH=/home/dwagner/git/linux-headers headers_install
+
+# MUSL:
+CROSS_COMPILE=m68k-linux-gnu- CFLAGS="-m68030 -msoft-float" ./configure --prefix=/home/dwagner/git/m68k-musl
+CROSS_COMPILE=m68k-linux-gnu- CFLAGS="-m68030 -msoft-float" make -j8
+CROSS_COMPILE=m68k-linux-gnu- CFLAGS="-m68030 -msoft-float" make install
+
+# busybox:
+CONFIG_CROSS_COMPILER_PREFIX="m68k-linux-gnu-"
+CONFIG_EXTRA_CFLAGS="-m68030 -msoft-float -specs=/home/dwagner/git/m68k-musl/lib/musl-gcc.specs -I/home/dwagner/git/linux-headers/include/
+CONFIG_EXTRA_LDFLAGS="-specs=/home/dwagner/git/m68k-musl/lib/musl-gcc.specs"

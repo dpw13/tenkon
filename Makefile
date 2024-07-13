@@ -56,6 +56,15 @@ newlib/newlib/build/Makefile:
 $(LIBC): newlib/newlib/build/Makefile
 	cd newlib/newlib/build && make -j8
 
+.PHONY: initramfs
+
+initramfs:
+	rm -rf initramfs
+	mkdir -p initramfs
+	install -Dm0755 ../busybox/busybox initramfs/bin/busybox
+	install -Dm0755 init.sh initramfs/init
+	cd initramfs && find . | sort | cpio -o -H newc -R 0:0 | gzip -9 > ../initramfs.img
+
 clean:
 	rm -f main *.o *.elf *.bin
 
