@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "serial.h"
 #include "asm.h"
+#include "s1d13506.h"
 
 inline void memWriteByte(const uint8_t b, const uintptr_t addr) {
     *(uint8_t *)addr = b;

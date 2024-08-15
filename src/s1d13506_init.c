@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "s1d13506.h"
+#include "s1d13506_internal.h"
 
 static struct s1d13xxxfb_regval s1d13xxxfb_initregs[] = {
 	/* line 344 of HP's doc */
