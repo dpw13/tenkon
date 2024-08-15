@@ -5,3 +5,6 @@
 *.img
 initramfs
 .vscode
+*.dtb
+*.itb
+*.gz

@@ -58,6 +58,7 @@ Nice to haves:
         It would be neat (extremely low priority) to be able to mess with the PnP regs and support multiple enet devices, which would require at least 10 address lines
     It's not required but it would be nice to have a serial eeprom to store the RTL8019AS MAC addr and config.
         This is programmed through the enet chip so shouldn't need to be socketed
+        Actually this is more of a need to have; full-duplex operation can only be enabled through an EEPROM
 
 TODO:
 Wish list of test pins for each board for debug headers
@@ -135,7 +136,11 @@ p.e fd800000 32
 l.e fd80000a 00ff z
 l.e fd800006 08ff z
 
+# full duplex (not writeable at runtime!)
+l.e fd80000c 40ff z
+
 # Linux:
+git checkout dwagner/tenkon
 CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k tenkon_defconfig
 CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k -j8
 CROSS_COMPILE=m68k-linux-gnu- make ARCH=m68k INSTALL_HDR_PATH=/home/dwagner/git/linux-headers headers_install
@@ -146,6 +151,5 @@ CROSS_COMPILE=m68k-linux-gnu- CFLAGS="-m68030 -msoft-float" make -j8
 CROSS_COMPILE=m68k-linux-gnu- CFLAGS="-m68030 -msoft-float" make install
 
 # busybox:
-CONFIG_CROSS_COMPILER_PREFIX="m68k-linux-gnu-"
-CONFIG_EXTRA_CFLAGS="-m68030 -msoft-float -specs=/home/dwagner/git/m68k-musl/lib/musl-gcc.specs -I/home/dwagner/git/linux-headers/include/
-CONFIG_EXTRA_LDFLAGS="-specs=/home/dwagner/git/m68k-musl/lib/musl-gcc.specs"
+
+tftp 0x04000000 192.168.1.125:tenkon.itb

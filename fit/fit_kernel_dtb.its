@@ -1,0 +1,69 @@
+/*
+ * Compilation:
+ * mkimage -f fit_kernel_dtb.its fit_kernel_dtb.itb
+ *
+ * Files in linux build dir:
+ * - arch/m68k/boot/Image (gzipped in Image.gz)
+ * - arch/m68k/boot/dts/stm32mp157c-dk2.dtb
+ *
+ * load mmc 0:4 $kernel_addr_r fit_kernel_dtb.itb
+ * bootm $kernel_addr_r
+ * bootm $kernel_addr_r#tenkon_alpha
+ *
+ */
+
+/dts-v1/;
+/ {
+	description = "U-Boot fitImage for Tenkon";
+	#address-cells = <1>;
+
+	images {
+		kernel {
+			description = "Linux kernel";
+			data = /incbin/("vmlinux.gz");
+			type = "kernel";
+			arch = "m68k";
+			os = "linux";
+			compression = "gzip";
+			load = <0x04000000>;
+			entry = <0x04000000>;
+			hash-1 {
+				algo = "md5";
+			};
+		};
+
+		fdt {
+			description = "FDT Tenkon";
+			data = /incbin/("tenkon.dtb");
+			type = "flat_dt";
+			arch = "m68k";
+			compression = "none";
+			hash-1 {
+				algo = "md5";
+			};
+		};
+
+        initrd {
+            description = "initramfs";
+            data = /incbin/("initramfs.img");
+            type = "ramdisk";
+            arch = "m68k";
+            os = "linux";
+            compression = "none";
+            hash {
+                algo = "md5";
+            };
+        };
+	};
+
+	configurations {
+		default = "tenkon_alpha";
+
+		tenkon_alpha {
+			description = "Tenkon 1.0a";
+			kernel = "kernel";
+			fdt = "fdt";
+            ramdisk = "initrd";
+		};
+	};
+};

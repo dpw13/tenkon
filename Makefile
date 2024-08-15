@@ -1,24 +1,10 @@
-MACHINE=68030
+include common.mak
 
-LIBC_INC=-Inewlib/newlib/libc/include -Inewlib/newlib/build/targ-include
-LIBC=newlib/newlib/build/libc.a
+NEWLIB := newlib/newlib
 
-OPT=-Os
-MIND_CFLAGS=-finline-limit=1000 -fdata-sections -ffunction-sections
-# Omit -msep-data as it produces a global offset table that takes up additional SRAM
-M68K_CFLAGS=-m${MACHINE} -msoft-float
+CONSOLE_LIBC := $(NEWLIB)/build/libc.a
 
-CFLAGS=-g -Wall -Wno-char-subscripts $(OPT) $(MIND_CFLAGS) $(M68K_CFLAGS) -std=gnu99 $(LIBC_INC)
-CXXFLAGS=$(CFLAGS) -nostdinc++ -fno-rtti -fno-exceptions
-LDFLAGS=-g $(OPT) -fomit-frame-pointer -nostdlib -Wl,--gc-sections -Wl,--build-id=none -Wl,--discard-locals -m68030 -Wl,--script=build/m${MACHINE}.ld
-PREFIX=m68k-linux-gnu
-
-CC=$(PREFIX)-gcc
-LD=$(PREFIX)-gcc
-OBJCOPY=$(PREFIX)-objcopy
-OBJDUMP=$(PREFIX)-objdump
-
-NEWLIB_OPTS= \
+NEWLIB_OPTS := \
 	--host=m68k-linux-gnu \
 	--enable-newlib-reent-small \
 	--disable-newlib-fvwrite-in-streamio \
@@ -32,41 +18,37 @@ NEWLIB_OPTS= \
 	--disable-newlib-supplied-syscalls \
 	--enable-newlib-io-c99-formats
 
-NEWLIB_CFLAGS= \
+NEWLIB_CFLAGS := \
 	-g -Os -m$(MACHINE) -msoft-float \
 	-D__SINGLE_THREAD__ -DREENTRANT_SYSCALLS_PROVIDED -DNO_FORK \
 	-UMISSING_SYSCALL_NAMES
 
-all: hi.bin lo.bin
+all: hi.bin lo.bin fit/tenkon.itb
 
 # Putting crt0.o first makes the objdump disasm clearer
-main.elf: crt0_mem.o exceptions.o console.o print_utils.o serial.o s1d13506_init.o $(LIBC) os_compat.o
-	$(LD) -o $@ $^ $(LDFLAGS) -Wl,-Map=main.map
+src/console.elf: $(CONSOLE_LIBC)
+	cd src && make
 
-rom.bin: main.elf
+rom.bin: src/console.elf
 	$(OBJCOPY) -O binary $< $@
 
-hi.bin lo.bin: swizzle.py rom.bin
-	python3 swizzle.py -o 0 -f rom.bin
+hi.bin lo.bin: swizzle.py rom.bin $(UBOOT_SRC)/u-boot.bin
+	python3 swizzle.py -o 0 -f rom.bin -o 0x8000 -f $(UBOOT_SRC)/u-boot.bin
 
-newlib/newlib/build/Makefile:
-	mkdir -p newlib/newlib/build
-	cd newlib/newlib/build && CFLAGS="$(NEWLIB_CFLAGS)" ../configure $(NEWLIB_OPTS)
+$(NEWLIB)/build/Makefile:
+	mkdir -p $(NEWLIB)/build
+	cd $(NEWLIB)/build && CFLAGS="$(NEWLIB_CFLAGS)" ../configure $(NEWLIB_OPTS)
 
-$(LIBC): newlib/newlib/build/Makefile
-	cd newlib/newlib/build && make -j8
+$(CONSOLE_LIBC): $(NEWLIB)/build/Makefile
+	cd $(NEWLIB)/build && make -j8
 
-.PHONY: initramfs
-
-initramfs:
-	rm -rf initramfs
-	mkdir -p initramfs
-	install -Dm0755 ../busybox/busybox initramfs/bin/busybox
-	install -Dm0755 init.sh initramfs/init
-	cd initramfs && find . | sort | cpio -o -H newc -R 0:0 | gzip -9 > ../initramfs.img
+fit/tenkon.itb:
+	cd fit && make tenkon.itb
 
 clean:
-	rm -f main *.o *.elf *.bin
+	cd src && make clean
+	cd fit && make clean
+	rm -f main *.o *.elf *.bin *.img *.map
 
 distclean: clean
-	rm -rf newlib/newlib/build
+	rm -rf $(NEWLIB)/build
