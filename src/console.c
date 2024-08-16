@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include "serial.h"
 #include "asm.h"
 #include "s1d13506.h"
+#include "test.h"
 
 inline void memWriteByte(const uint8_t b, const uintptr_t addr) {
     *(uint8_t *)addr = b;
@@ -160,76 +160,6 @@ void showLWords(const uintptr_t addr, const int size) {
     }
 }
 
-uint32_t getSequenceWord(const uintptr_t addr, const uint8_t mode) {
-    switch (mode) {
-        case '0':
-            return 0x00000000;
-        case '1':
-            return 0xFFFFFFFF;
-        case 'A': // alternating 0,1
-            return 0xAAAAAAAA;
-        case '5': // alternating 1,0
-            return 0x55555555;
-        case 's':
-        case 'S': // self-address
-            return addr;
-        case 'r':
-        case 'R':
-        default:
-            return rand();
-    }
-}
-
-/* Note that this overwrites values in memory in the specified window, so
- * avoid calling this with a window that overlaps the current stack.
- */
-void memTest(const uintptr_t addr, const uintptr_t size, const uint8_t mode) {
-    uint32_t *buf;
-    uint32_t offset;
-    uint32_t errCount;
-
-    /* Seed PRNG so we always get the same sequence */
-    srand(0);
-    buf = (uint32_t *)addr;
-    for (offset = 0; offset < size; offset += sizeof(uint32_t)) {
-        *buf++ = getSequenceWord(addr + offset, mode);
-    }
-
-    /* Reset PRNG sequence */
-    srand(0);
-    buf = (uint32_t *)addr;
-    errCount = 0;
-    for (offset = 0; offset < size; offset += sizeof(uint32_t)) {
-        uint32_t val = getSequenceWord(addr + offset, mode);
-        if (*buf != val) {
-            /* Only print first error */
-            if (errCount == 0) {
-                printf("Mismatch at %p: expected %08x but read %08x. Supressing further error messages.\n", buf, val, *buf);
-            }
-            errCount += 1;
-        }
-        *buf++ = ~val;
-    }
-
-    /* If the mode isn't random check the inverted values */
-    if(mode != 'r' && mode != 'R') {
-        printf("Checking Inverted Pattern\n");
-        buf = (uint32_t *)(addr + size);
-        for(offset = size; offset > 0; offset -= sizeof(uint32_t)) {
-            uint32_t val = ~ getSequenceWord(addr + offset, mode);
-            if (*buf != val) {
-                if (errCount == 0) {
-                    printf("Mismatch at %p: expected %08x but read %08x. Supressing further error messages.\n", buf, val, *buf);
-                }
-                errCount += 1;
-            }
-            buf--;
-        }
-    }
-
-    printf("Found %d errors\n", errCount);
-}
-
 /* Print out some minimal info about the current execution context
  * Useful for verifying supervisor mode, interrupt mask, and current
  * code and stack locations.
@@ -371,6 +301,12 @@ void consoleLoop(void) {
                 scanf("%d", &size);
                 memTest(addr, size, cmd);
                 break;
+            case 'T': //io test
+            case 't':
+                scanf("%d", &size);
+                initDRAM();
+                ioTest(size);
+                break;
             case 's': //Set status register
             case 'S':
                 scanf("%hx", &word);
@@ -424,6 +360,7 @@ int main(void) {
     printf("R addr      - Calls subroutine located at addr\n");
     printf("  R.d addr  - Enables control flow tracing before calling subroutine\n");
     printf("M addr size - Test size bytes of memory starting at addr\n");
+    printf("T iteration - Test i/o accesses\n");
     printf("S value     - Set status register\n");
     printf("I           - Print info about the current execution context\n");
     printf("D           - Trace control flow\n");
