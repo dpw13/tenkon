@@ -1,0 +1,31 @@
+GAL22V10
+8BIT_CS
+
+; Name     8BIT_CS ;
+; PartNo   00 ;
+; Date     3/22/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device    p22v10;
+
+A21        A22        A23        A28        A29        A30        A31        A24        A25        A26        A27       GND
+/AS        /CPUSPACE  RnW        /CIIN      /CSPS2     /CSTERM    /CSDUART   /CSRTC     /CSIO      /WR        /RD       VCC
+
+CSIO = A31 * A30 * A29 * A28 * A27 * A26 * A25 * /A24 * /CPUSPACE * AS;
+
+;CIIN = 'b'1;
+;CIIN.OE = CSIO;
+
+CSPS2 = CSIO * A23 * A22;
+CSRTC = CSIO * A23 * /A22;
+CSTERM = CSIO * /A23 * A22;
+CSDUART = CSIO * /A23 * /A22;
+
+RD = RnW * CSIO;
+WR = /RnW * CSIO;
+
+
+

@@ -1,0 +1,53 @@
+GAL22V10
+8BIT_INT
+
+; Name     8BIT_INT ;
+; PartNo   00 ;
+; Date     2/2/2023 ;
+; Revision 01 ;
+; Designer Engineer ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+; Note that the keyboard and mouse IRQs are active high while the DUART and RTC IRQs are active low
+
+RTC_IRQ      A1           A2           A3           MOUSE_IRQ    KEYB_IRQ   /IPEND       /AS          /DUART_IRQ   /TERM_IRQ   /IRQ_VEC_CS  GND
+RnW          /B_IPEND_O   /B_AVEC      INT0         INT1         INT2       INTVEC_V2    INTVEC_V1    INTVEC_V0    /INTVEC_EN  NC           VCC
+
+; For now we only use a single global IRQ line (3, in the middle) and different
+; vectors for each device that can request an IRQ.
+
+; Really this is a single IRQ line that is the OR of all incoming interrupts mapped
+; to our single global IRQ (3)
+INT2 = VCC ; INT2 (C on 74LS156) VCC selects 1Yx (low IRQs), GND selects 2Yx (high IRQs) 
+INT1 = RTC_IRQ + MOUSE_IRQ + KEYB_IRQ + DUART_IRQ + TERM_IRQ
+INT0 = RTC_IRQ + MOUSE_IRQ + KEYB_IRQ + DUART_IRQ + TERM_IRQ
+
+; Do not gate downstream IPEND
+B_IPEND_O = IPEND
+
+; We do not drive /AVEC
+B_AVEC.T = GND
+/B_AVEC.E = GND
+
+; Instead, respond to interrupt vector request if the request is for our global IRQ
+INTVEC_EN = AS * RnW * IRQ_VEC_CS * /A3 * A2 * A1
+
+; Decode IRQ vector based on priority. From highest to lowest:
+; /RTC_IRQ      7 (111) Vector 0xC7 - note all user interrupt vectors must be > 0x40
+; /TERM_IRQ     5 (101)        0xC5
+; /DUART_IRQ    4 (100)        0xC4
+; /KEYB_IRQ     3 (011)        0xC3
+; /MOUSE_IRQ    2 (010)        0xC2
+
+; I just kinda did this in my head because the truth table is large and tedious. Sorry
+; for not showing my work.
+INTVEC_V2 = RTC_IRQ + TERM_IRQ + DUART_IRQ
+INTVEC_V1 =  RTC_IRQ
+          + /TERM_IRQ * /DUART_IRQ * KEYB_IRQ
+          + /TERM_IRQ * /DUART_IRQ * MOUSE_IRQ
+INTVEC_V0 =  RTC_IRQ
+          +  TERM_IRQ
+          + /DUART_IRQ * KEYB_IRQ

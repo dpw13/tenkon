@@ -1,0 +1,60 @@
+GAL22V10
+DRAM_CS
+
+; Name     DRAM_CS
+; PartNo   00
+; Date     6/24/2024
+; Revision 01
+; Designer Dylan Enloe
+; Company  Test
+; Assembly None
+; Location
+; Device   p22v10
+
+; See https://www.pjrc.com/mp3/simm/datasheet.html for RAS/CAS layout. We are working
+; with rank 2 32 MB SIMMs with each CASx line controlling a byte.
+
+/AS        A0         A1         SIZ0       SIZ1       A26        A27        A28        A29        A30        A31        GND
+RnW        /UUD       /UMD       /LMD       /LLD       NC         DIR        NC         /MLLatch  /CS        /CPUSPACE VCC
+
+; DRAM config (/ML) is located 0xF800 0000. Note that /CS does not need to assert
+; when the CPU accesses this region. The configuration word is written by setting
+; the address bits, not the data bits. Consider mode access write-only as well.
+;
+; The DP8422V will apply the mode bits when /ML deasserts, which will occur when
+; /MLLatch rises (DEasserts), so at the end of this access.
+MLLatch = /CPUSPACE & /RnW & AS & A31 & A30 & A29 & A28 & A27 & /A26
+
+; Use the CS method of configuring the chip so we get a /DTACK terminating the access.
+; DRAM data is located at 0x0400 0000 - 0x07FF FFFF (64 MB)
+CS = /CPUSPACE & AS &  A31 &  A30 &  A29 &  A28 &  A27 & /A26
+   + /CPUSPACE & AS & /A31 & /A30 & /A29 & /A28 & /A27 &  A26
+
+; DIR should be low on reads and high on writes
+DIR = /RnW
+
+; CASx (per-byte) enables. Asserting ECASx will gate CASx if ECASx is not asserted,
+; and will keep CASx asserted as long as it is asserted. By not asserting ECASx at
+; all during a bus cycle, we prevent the individual DRAM chip from driving its output,
+; leaving that byte tristated. Not asserting CASx also prevents writes.
+;
+; /ECAS3, D31-D24, bottom byte in memory. Wrapping accesses across word boundaries are not allowed,
+; so the only way to access this byte is directly (0b00).
+UUD = AS * /A0 * /A1
+
+; /ECAS2, D16-23, byte 0b01.
+UMD = AS * A0 * /A1    ; Direct access
+    + AS * /A1 * /SIZ0 ; Access to 0b0X with size 1 or 3
+    + AS * /A1 * SIZ1  ; Access to 0b0X with size 2 or 4
+
+; /ECAS1, D8-15, byte 0b10
+LMD = AS * /A0 * A1              ; Direct access
+    + AS * /A1 * /SIZ0 * /SIZ1   ; Access to 0b0X with size 4
+    + AS * /A1 * SIZ0 * SIZ1     ; Access to 0b0X with size 3
+    + AS * /A1 * A0 * /SIZ0      ; Access to 0b01 with size 1 or 3
+
+; /ECAS0, D0-7, byte 0b11
+LLD = AS * A0 * A1          ; Direct access
+    + AS * A0 * SIZ0 * SIZ1 ; Access to 0bX1 with size 3
+    + AS * /SIZ0 * /SIZ1    ; Access to any address with size 4
+    + AS * A1 * SIZ1        ; Access to 0b1X with size 1 or 3

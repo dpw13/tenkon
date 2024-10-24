@@ -1,0 +1,46 @@
+GAL22V10
+CPU_CS
+
+; Name     CPU_CS ;
+; PartNo   00 ;
+; Date     3/29/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   22v10 ;
+
+A21   A22     A23   A24   A25     A26      A27       A28   A29   A30          A31   GND
+A20   /IRQ_CS NC    NC    /EXT_CS /ROM_CS  /SRAM_CS  FC1   FC0   /BOOTSTRAP   /AS   VCC
+
+;CPUBOARD = /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; DATASPACE = /FC1 * FC0
+; PROGSPACE = FC1 * /FC0
+;VALIDSPACE = /FC1 * FC0 + FC1 * /FC0
+
+; All equations must be expanded in the form of sum-of-products (SOP)
+; ROM 0xFFF0_0000 - 0xFFFF_FFFF
+;     0x0000_0000 - 0x000F_FFFF (bootstrap only)
+ROM_CS  =              AS * /IRQ_CS *  A20 *  A21 *  A22 *  A23 *  A24 *  A25 *  A26 *  A27 *  A28 *  A29 *  A30 *  A31
+        + BOOTSTRAP * AS * /IRQ_CS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; SRAM 0x00_0000 - 0x0F_FFFF (after bootstrap only)
+SRAM_CS = /BOOTSTRAP * AS * /IRQ_CS * /A20 * /A21 * /A22 * /A23 * /A24 * /A25 * /A26 * /A27 * /A28 * /A29 * /A30 * /A31
+
+; Off-board 0x0100_0000 - 0xFEFF_FFFF. Note that 14 is the max number of product terms.
+EXT_CS = AS *  A31 *  A30 *  A29 *  A28 *  A27 *  A26 *  A25 * /A24                      ; FE
+       + AS *  A31 *  A30 *  A29 *  A28 *  A27 *  A26 * /A25                             ; FC-FD
+       + AS *  A31 *  A30 *  A29 *  A28 *  A27 * /A26                                    ; F8-FB
+       + AS *  A31 *  A30 *  A29 *  A28 * /A27                                           ; F0-F7
+       + AS *  A31 *  A30 *  A29 * /A28                                                  ; E0-EF
+       + AS *  A31 *  A30 * /A29                                                         ; C0-DF
+       + AS *  A31 * /A30                                                                ; 80-BF
+       + AS * /A31 *  A30                                                                ; 40-7F
+       + AS * /A31 * /A30 *  A29                                                         ; 20-3F
+       + AS * /A31 * /A30 * /A29 *  A28                                                  ; 10-1F
+       + AS * /A31 * /A30 * /A29 * /A28 *  A27                                           ; 08-0F
+       + AS * /A31 * /A30 * /A29 * /A28 * /A27 *  A26                                    ; 04-07
+       + IRQ_CS
+

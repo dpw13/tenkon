@@ -1,0 +1,39 @@
+GAL22V10
+CPU_DATA_ACK
+
+; Name     CPU_DATA_ACK ;
+; PartNo   00 ;
+; Date     3/29/2023 ;
+; Revision 01 ;
+; Designer Dylan Enloe ;
+; Company  Test ;
+; Assembly None ;
+; Location  ;
+; Device   p22v10 ;
+
+CLK        /SRAMCS    SRAMDELAY  ROMDELAY   /ROMCS     /BG        /DS        NC         NC         /COPDSACK0 /COPDSACK1 GND
+NC         /BUSSTERM  /BUSDSACK1 /BUSDSACK0 /STERM     /DSACK1    /DSACK0    NC         NC         NC         NC         VCC
+
+STERM = /ROMCS * /SRAMCS * BUSSTERM;
+
+; DSACK0 = BUSDSACK0 # COPDSACK0;
+; DSACK1 = BUSDSACK1 # COPDSACK1 # (ROMCS & ROMDELAY);
+
+; Drive bus signals high when outside of an active data phase to force bus back to idle quickly
+BUSDSACK0.T = GND
+BUSDSACK1.T = GND
+BUSSTERM.T = GND
+
+/BUSDSACK0.E = /DS
+/BUSDSACK1.E = /DS
+/BUSSTERM.E = /DS
+
+DSACK0 = /ROMCS * /SRAMCS * DS * BUSDSACK0
+       +           SRAMCS * DS * SRAMDELAY
+       +                    DS * COPDSACK0
+
+DSACK1 = /ROMCS * /SRAMCS * DS * BUSDSACK1
+       +  ROMCS           * DS * ROMDELAY
+       +           SRAMCS * DS * SRAMDELAY
+       +                    DS * COPDSACK1
+
